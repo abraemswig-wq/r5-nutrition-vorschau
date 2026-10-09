@@ -1,0 +1,297 @@
+/* REHAB FIVE NUTRITION — Ergaenzung zum Fuenf-Saeulen-System.
+   style.css, pages.css und schriften.css sind unveraenderte Kopien aus
+   r5-fuenf-saeulen und bleiben es auch: was am Grundsystem der Praxis-Seite
+   verbessert wird, laesst sich dann weiter herueberkopieren. Alles
+   NUTRITION-Eigene steht nur hier — dieselbe Teilung wie club.css beim
+   Health Club. */
+
+/* ---------- Vertrauensleiste: vier Felder, nicht fuenf ---------- */
+/* Die Praxis-Seite listet im Intro die fuenf Saeulen. Ernaehrung ist keine
+   davon (Therapie · Training · Athletik · Praevention · Diagnostik), deshalb
+   traegt diese Leiste hier Vertrauensmerkmale statt Saeulen — und davon gibt es
+   vier. Im Fuenfer-Raster des Grundsystems blieb die fuenfte Spalte leer und
+   die Leiste endete mitten im Satz. Das Mobil-Raster (zwei Spalten) aus
+   style.css passt unveraendert: 4 geht glatt in 2 auf. */
+.saeulen--vier{grid-template-columns:repeat(4,minmax(0,1fr))}
+
+/* ---------- Ein Standort, nicht zwei ---------- */
+/* Beratung findet nur an der Weseler Strasse 71 statt. Im Zweierraster der
+   Praxis-Seite bliebe die rechte Haelfte leer und saehe aus wie ein
+   Ladefehler. Gleiche Begruendung wie im Club. */
+.orte--eins{grid-template-columns:minmax(0,27rem)}
+
+/* ---------- Wortmarke mit Untermarke ---------- */
+/* Das Logo im Kopf ist das der Praxis — es traegt den Vertrauensuebertrag und
+   bleibt deshalb unveraendert. Welches der drei Haeuser man gerade liest,
+   stuende damit aber nirgends: Physio, Club und NUTRITION haetten denselben
+   Kopf. Darum steht der Markenname als Beischrift daneben, abgesetzt durch
+   einen Haarstrich, nicht durch Klammern oder einen Bindestrich (die laesen
+   sich wie Teil des Logos).
+   flex ueberschreibt das display:block aus style.css; ohne das lieg die
+   Beischrift unter dem Logo und schoebe die Kopfleiste auf.
+   baseline statt center waere falsch: das Logo ist ein Bild ohne Grundlinie,
+   der Browser setzt dessen Unterkante auf die Grundlinie der Schrift und das
+   Wort rutschte sichtbar nach oben. */
+.wordmark--sub,
+.page-top .wordmark--sub{
+  display:flex;align-items:center;gap:.6rem;
+  /* Das Grundsystem setzt die Wortmarke als reines Bild und brauchte das nie;
+     sobald Text darin steht, unterstreicht der Browser ihn als Link und das
+     Wort sieht aus wie ein eigener Menuepunkt neben dem Logo. */
+  text-decoration:none;
+}
+.wordmark--sub span,
+.page-top .wordmark--sub span{
+  /* Haarstrich als Rahmen, nicht als ::before-Pseudoelement: so braucht er
+     kein eigenes Element und sitzt immer an der Textkante.
+     Der Innenabstand oben und unten gibt ihm seine Hoehe: ohne ihn waere er
+     nur so hoch wie die 11px der Beischrift und stuende neben dem 27px hohen
+     Logo wie ein verirrter Strich. */
+  padding:.3rem 0 .3rem .6rem;
+  border-left:1px solid rgba(251,241,224,.3);
+  font-size:.6875rem;font-weight:500;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(251,241,224,.82);
+  line-height:1;
+  /* Die Beischrift ist Teil der Marke, nicht ein Wort im Text: sie darf nicht
+     umbrechen, sonst wird aus „Nutrition" bei engen Breiten „Nutri-tion". */
+  white-space:nowrap;
+}
+.wordmark--sub:hover span{color:var(--cream)}
+
+@media (max-width:820px){
+  /* Logo faellt in style.css auf 22px (Kino) bzw. pages.css auf 20px
+     (Unterseiten). Die Beischrift geht mit, sonst dominiert sie das Logo. */
+  .wordmark--sub,
+  .page-top .wordmark--sub{gap:.45rem}
+  .wordmark--sub span,
+  .page-top .wordmark--sub span{
+    padding:.25rem 0 .25rem .45rem;
+    font-size:.625rem;letter-spacing:.12em;
+  }
+}
+
+/* Unter ~380px (iPhone SE, Galaxy A im Hochformat) stehen Burger, Logo und
+   Beischrift zusammen breiter als die Zeile zwischen den Gassen. Dann faellt
+   die Beischrift weg und nicht das Logo: ohne Logo waere der Weg zurueck auf
+   die Hauptseite nicht mehr erkennbar. */
+@media (max-width:380px){
+  .wordmark--sub span,
+  .page-top .wordmark--sub span{display:none}
+}
+
+/* ---------- Hochformat im Fliesstext ---------- */
+/* .bild aus pages.css setzt width:100% — auf den Unterseiten der Praxis stehen
+   dort ausschliesslich Querformate. Das Portrait von Maya ist 2:3; ueber die
+   volle Lesespalte (gemessen 649px) waere es 974px hoch und fuellte damit fast
+   ein ganzes Fenster. Begrenzt wird die BREITE, nicht die Hoehe: eine
+   Hoehenbegrenzung mit object-fit schnitte den Kopf an. */
+.bild--hoch img{max-width:min(22rem,70%)}
+.bild--hoch figcaption{max-width:min(22rem,70%)}
+
+/* ---------- Fussnote unter einem Textblock ---------- */
+/* Fuer rechtliche Einordnungen, die zu einem einzelnen Block gehoeren — etwa
+   die Pflichtangabe unter den Erfahrungsberichten. Das Grundsystem hat dafuer
+   nur .team-note, und die steht ueber die volle Seitenbreite mit eigenem
+   Seitenrand; in der Textspalte waere sie doppelt eingerueckt. */
+.prose .fussnote{
+  margin:-1.4em 0 2.6em;
+  font-size:.8125rem;line-height:1.7;font-weight:300;
+  color:rgba(251,241,224,.5);
+}
+
+/* ---------- Kopfhoehe: Bildausschnitt nach oben ziehen ---------- */
+/* Alle Motive sind 4:3, ein Kino-Kapitel ist etwa 1,7:1 bis 2,4:1. Der Ueberhang
+   ist deshalb senkrecht und gross: bei 1440x900 sind es 21,8 % der Bildhoehe,
+   bei 1920x800 rund 48,6 %. `object-position:center` aus style.css verteilt den
+   Ueberhang halbe-halbe und nimmt damit 10,9 % bzw. 24 % von OBEN weg — genau
+   dort, wo die Koepfe sind.
+   Gemessen mit Apple Vision (pruefung/kopf-anschnitt.py, pruefung/gesichter.swift):
+   der tiefste Scheitel im Bestand liegt bei real-tablet.jpg auf 5,5 % der
+   Bildhoehe. 6 % Ueberhang nach oben lassen bei 1920x800 noch 2,9 % stehen und
+   damit auch diesen Kopf vollstaendig im Bild; die Kinne bleiben bei allen
+   Motiven weit oberhalb der Unterkante, der Beschnitt wandert also in die
+   Decke, nicht ins Gesicht.
+   Warum hier und nicht in style.css: die Datei ist mit Physio, Health Club und
+   Business byte-identisch und die Physio-Seite ist live. Dieselbe Geometrie
+   schneidet dort mit hoher Wahrscheinlichkeit genauso — das ist aber Arics
+   Entscheidung, keine stille Aenderung an einer laufenden Seite. */
+.beat__img{object-position:center 6%}
+
+/* Deckflaechen der Unterseiten: pages.css setzt `center 32%`. Der Ueberhang ist
+   dort kleiner als im Kino, aber 32 % reichen trotzdem nicht — auf
+   programme.html fehlten real-banane 12 % des Kopfes, auf unternehmen.html
+   real-dialog 11 %. 10 % halten beide Scheitel im Bild. Auch das bleibt
+   markenlokal: der Wert in pages.css steht auf 33 Seiten der Praxis. */
+.artcover__bg>img{object-position:center 10%}
+
+/* ---------- Bildausschnitt des Intro-Motivs ---------- */
+/* Maya steht im rechten Drittel des Fotos. Unterhalb von 821px laeuft die
+   Startseite ohne Kino-Mechanik, das Motiv steht dann hochkant im Fenster:
+   aus 1600x1200 bleiben bei 390px Breite noch 35% sichtbar, und
+   object-position:center aus style.css schneidet genau die Mitte heraus — das
+   Flipchart-Papier, ohne sie. 68% ruecken das Fenster weit genug nach rechts,
+   dass sie darin steht, schnitten ihr aber die rechte Gesichtshaelfte ab (ihr
+   Gesicht reicht bis 83,1 % der Bildbreite, das Fenster endete bei 79,1 %).
+   80% legen das Fenster auf 52,3–86,9 % und damit vollstaendig um sie herum.
+   Senkrecht gibt es hier keinen Ueberhang — das Bild ist im Hochformat genau so
+   hoch wie das Fenster, deshalb `center` und nicht die 6 % von oben.
+   Nur dieser eine Beat, denn style.css ist mit den anderen drei Marken
+   identisch und darf sich nicht unterscheiden. */
+@media (max-width:820px){
+  .beat[data-key="Intro"] .beat__img{object-position:80% center}
+
+  /* Dasselbe Problem, nur andere Motive. Im Hochformat ist von einem
+     4:3-Bild nur noch gut ein Drittel der Breite zu sehen (bei 390px Fenster:
+     34,6 %), und `center` legt dieses Drittel genau in die Mitte — dort steht
+     auf diesen Fotos niemand.
+     Kasse (real-tablet): zwei Personen, 0,26–0,36 und 0,76–0,85 der Breite.
+     Beide zusammen sind 0,59 breit und passen nicht in 0,35 — es muss eine
+     ausgewaehlt werden. 30 % zeigen das Fenster 0,20–0,54: die kniende
+     Therapeutin ganz, die zweite Person sauber draussen. Die rechte Variante
+     waere ein schmaler Streifen ohne Zusammenhang.
+     Ablauf (real-anamnese): eine Person bei 0,22–0,35. 25 % legen das Fenster
+     auf 0,16–0,51. */
+  .beat[data-key="Kasse"] .beat__img{object-position:30% center}
+  .beat[data-key="Ablauf"] .beat__img{object-position:25% center}
+
+  /* Deckflaechen sind flacher als ein Kapitel (max. 640px hoch), das Fenster
+     ist mit 46,8 % der Bildbreite entsprechend breiter.
+     programme.html (real-banane): Maya bei 0,70–0,83 — 80 % zeigen 0,43–0,89.
+     unternehmen.html (real-dialog): beide Koepfe liegen zwischen 0,37 und 0,82
+     und passen damit gerade noch gemeinsam hinein; 67,5 % zeigen 0,36–0,83.
+     Der Spielraum ist hier nur rund 3 Prozentpunkte breit — wer den Wert
+     anfasst, schneidet sofort eine der beiden an. */
+  .artcover__bg--fokus-rechts>img{object-position:80% 10%}
+  .artcover__bg--fokus-paar>img{object-position:67.5% 10%}
+}
+
+/* ===== Wissens-Bereich ===================================================
+   Die 21 Fachartikel bringen vier Bausteine mit, die der Praxis-Blog nicht
+   hatte. Sie stehen hier und nicht in pages.css, weil style.css, pages.css und
+   schriften.css in allen vier Kino-Marken byte-identisch bleiben sollen — wer
+   eine davon anfasst, muss sie viermal anfassen. */
+
+/* Der Quellen-Vorbehalt unter der Literaturliste. Kleiner als die Liste und
+   abgesetzt: er gehoert zum Apparat, nicht zum Text. */
+.sources__hinweis{
+  margin:1.4rem 0 0;max-width:var(--lese);
+  padding-top:1rem;border-top:1px solid rgba(251,241,224,.16);
+  font-size:.75rem;line-height:1.65;color:rgba(251,241,224,.62);
+}
+.sources__hinweis b{font-weight:600;color:rgba(251,241,224,.82)}
+
+/* ---------- Sprungziele unter der klebenden Kopfleiste ---------- */
+/* Fuenf Regeln rechneten dieselbe Rechnung mit derselben festen Zahl (6rem in
+   .prose h2[id], .prose h3[id], .sources li, .pos__i[id], 6.5rem in .rail__t).
+   Gemessen stimmt die Zahl nur am Schreibtisch: bei 1440 endet die Kopfleiste
+   bei 76px, 6rem = 96px gehen auf. Bei 390 ist die Leiste 121px hoch — die
+   Ueberschrift landete 25px DAHINTER. Betroffen war damit jeder Sprung aus dem
+   Inhaltsverzeichnis in allen 21 Artikeln, also die Hauptnavigation im Artikel,
+   und zwar genau auf dem Geraet, auf dem die meisten lesen.
+   Aufgefallen ist es erst beim Nachmessen des neuen Ankers #maya-pilgram; von
+   Hand sieht man es nicht, weil die Ueberschrift ja irgendwo oben steht.
+
+   Deshalb eine Zahl an einer Stelle statt fuenfmal derselbe Zahlenwert. Der
+   Rueckfallwert `6rem` steht in jedem var() mit drin: pages.css ist laut
+   Dateikopf oben eine unveraenderte Kopie aus r5-fuenf-saeulen und bleibt es —
+   die Ueberschreibungen stehen hier, und die kopierte Datei funktioniert ohne
+   diese Variable weiter wie bisher. */
+:root{--ankerluft:6rem}
+@media (max-width:820px){
+  /* 9rem = 144px, also 23px Luft unter der 121px hohen Leiste. */
+  :root{--ankerluft:9rem}
+}
+.prose h2[id],
+.prose h3[id],
+/* Jede Quelle ist ein Sprungziel (#q1 … #q12) aus dem Fliesstext. */
+.sources li,
+/* #maya-pilgram — das Ziel der Autorenzeile unter den Wissens-Artikeln. Wer von
+   dort kommt, soll den Steckbrief sehen und nicht die Kopfleiste. */
+.pos__i[id]{scroll-margin-top:var(--ankerluft,6rem)}
+/* Die Rubrikzeile des Wissens-Index trug eine halbe Zeile mehr. Bleibt so. */
+.rail__t{scroll-margin-top:calc(var(--ankerluft,6rem) + .5rem)}
+
+/* Nummerierte Listen im Fliesstext (25 Stueck, etwa Eliminations-Schritte in
+   Reihenfolge). .prose ul setzt list-style:none und malt den orangen Strich
+   per ::before — bei <ol> ergaebe das Strich UND Zahl. Also: Zahl behalten,
+   Strich wegnehmen. Der Zaehler laeuft eigenhaendig, damit die Ziffer die
+   Markenfarbe tragen kann; list-style-position haette sie creme gelassen. */
+.prose ol:not([class]){margin:0 0 1.5em;padding:0;list-style:none;counter-reset:schritt}
+.prose ol:not([class])>li{counter-increment:schritt}
+.prose ol:not([class])>li::before{
+  content:counter(schritt) ".";
+  position:absolute;left:0;top:0;
+  width:auto;height:auto;background:none;
+  font-size:.8125rem;font-weight:700;line-height:1.9;
+  color:var(--orange);font-variant-numeric:tabular-nums;
+}
+
+/* Zwischenebene unter h2 (15 Stueck). Deutlich kleiner als h2 und ohne deren
+   Trennlinie — sonst liest sich jede Unterfrage wie ein neues Kapitel. */
+.prose h3{
+  margin:2em 0 .6em;
+  font-size:clamp(.98rem,1.4vw,1.125rem);
+  font-weight:700;letter-spacing:-.005em;line-height:1.3;
+  color:var(--cream);
+}
+/* scroll-margin-top steht weiter oben bei den Sprungzielen. Hier stand es
+   nochmal mit fester Zahl — und weil es spaeter kommt, haette es die Variable
+   wieder ausgehebelt. */
+
+/* Lange Masthead-Zeile auf dem Handy. pages.css verkleinert nur
+   .artcover .hl--lang (Zeile 126), nie den Masthead — dort schluckt
+   .masthead{overflow:hidden} den Ueberhang stillschweigend. Gemessen an
+   team.html („Volle Aufmerksamkeit.", 21 Zeichen): die Zeile ragt 78,4px
+   ueber ihre Spalte bei 320px Fenster (353,6 statt 275,2) und 45,6px bei
+   390px (381 statt 335,4).
+   7,4vw ist knapp zu viel — gemessen blieben 0,3px Ueberlauf auf allen vier
+   Breiten. 7,3vw laesst rund 4px Luft. Der Wert gehoert gemessen, nicht
+   geschaetzt: sichtbar wird dieser Fehler nie, im Bild sieht die
+   abgeschnittene Zeile aus wie eine kurze Zeile.
+   Nachmessen mit pruefung/zeilen-breite.py. */
+@media (max-width:820px){
+  .masthead .hl--lang{font-size:min(var(--hl-size),7.3vw)}
+}
+
+/* Karte ohne Foto. Die 21 Indikationen haben keine eigenen Bilder, und sie
+   sollen auch keine bekommen: generische Gemüse-Fotos wären genau die
+   Bildsprache, gegen die der Text argumentiert. Also trägt die Karte, was sie
+   wirklich unterscheidet — den Diagnosecode.
+   .qc__img entfällt ersatzlos (eigener Block in pages.css, kein Pflichtteil);
+   an seine Stelle tritt der Code als Anker: groß genug, um beim Überfliegen
+   einer Leiste die Marke zu setzen, die sonst das Bild setzt. */
+.qc--text{
+  padding-top:1.5rem;
+  min-height:11.5rem;              /* sonst sind 2-Zeilen- und 3-Zeilen-Titel
+                                      unterschiedlich hoch und die Leiste wackelt */
+}
+.qc--text .qc__ind{
+  padding:0 1.4rem .9rem;
+  font-size:.9375rem;font-weight:700;letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;
+  text-transform:none;             /* ICD-Codes sind schon groß: „K76.0" */
+}
+.qc--text .qc__t{
+  font-size:clamp(1.0625rem,1.3vw,1.125rem);
+}
+/* Die Trennlinie steht in pages.css rechts an jeder Karte. Ohne Bildkante
+   oben wirkt die Karte damit wie eine Tabellenspalte — eine feine Linie
+   oberhalb des Codes gibt ihr wieder einen Anfang. */
+.qc--text .qc__ind::before{
+  content:"";display:block;width:1.6rem;height:2px;
+  background:var(--orange);margin-bottom:.9rem;
+}
+
+/* blog-v2.js blendet die Pfeile aus, wenn es nichts zu scrollen gibt:
+   `nav.hidden = !scrollbar`. Sichtbar wird das nie — `.rail__nav{display:flex}`
+   in pages.css (Zeile 798) schlaegt die `[hidden]`-Regel des Browsers, weil
+   Autoren-CSS vor Browser-CSS kommt. Das Attribut steht also korrekt im DOM
+   und bewirkt nichts; stehen bleiben zwei graue, abgeschaltete Knoepfe.
+   Gemessen auf dem Praxis-Blog (live, r5-fuenf-saeulen/blog/): bei 1680px hat
+   die Leiste „Fuss & Achillessehne" nichts zu scrollen, hidden=true — und die
+   Pfeile stehen trotzdem da. Hier faellt es staerker auf: fuenf der sieben
+   Rubriken passen bei 1440px vollstaendig ins Fenster.
+   Der Fix gehoert eigentlich in pages.css, aber die Datei ist mit drei anderen
+   Marken byte-identisch und die Praxis-Seite ist live — das ist Arics
+   Entscheidung. Siehe auch .beat__img weiter oben, gleiche Lage. */
+.rail__nav[hidden]{display:none}

@@ -1,0 +1,1714 @@
+/* REHAB FIVE — Blog & Team
+   Dieselben Tokens und dieselbe Typo wie die Kino-Seite, aber normal scrollend.
+   style.css wird davor geladen; hier steht nur, was Fließseiten zusätzlich brauchen. */
+
+/* ---------- Satzspiegel ----------
+
+   Jeder gedeckelte Block klebte links. `max-width` ohne `margin-inline:auto`
+   heisst: der gesamte Ueberschuss faellt rechts an. In der ganzen Datei stand
+   kein einziges `margin-inline:auto` — das ist Arithmetik, kein Geschmack, und
+   es wurde mit jedem Zoll Bildschirm schlimmer:
+
+       Rand links / rechts    1440: 96/215    1920: 128/631    2560: 171/1186
+
+   Dazu lief die Kopfzeile ueber die volle Breite, waehrend der Inhalt
+   gedeckelt war: bei 2560 endete die Navigation bei 2389 und der Text bei
+   1374. Zwei verschiedene rechte Kanten auf derselben Seite.
+
+   Jetzt teilen sich alle Baender einen Satzspiegel und stehen darueber mittig.
+   Das *alle* ist der kritische Teil: bliebe ein Band zurueck, haette die Seite
+   zwei linke Kanten, und das ist sichtbar schlimmer als ein zu grosser rechter
+   Rand. Betroffen sind Kopfzeile, Deckflaeche, Standort-Hero, Faktenreihe,
+   Bildstrecke, Hauswechsel, Text+Seitenspalte, Weiterlesen, Abschluss, Fuss.
+
+   Spalte und Schrift wachsen gemeinsam. Wer nur die Spalte verbreitert, macht
+   die Zeilen laenger: 72ch bei 16px waren gemessen 85 Zeichen je Zeile, schon
+   am oberen Rand des Vertretbaren (gut bis 75, vertretbar bis 85). Die
+   Lesespalte waechst um 18 %, die Schrift um 12 % — unterm Strich bleibt die
+   Zeilenlaenge, wo sie war, und die Spalte ist trotzdem breiter. */
+body.page{
+  overflow-x:hidden;
+
+  /* Gerechnet, nicht geschaetzt: der Fliesstext ist Barlow Light. Gemessen mit
+     canvas.measureText auf dem berechneten Font liegt die mittlere
+     Zeichenbreite bei 0,425 * Schriftgrad (6,80px bei 16px). Eine Zeile von
+     80 Zeichen ist damit 34 * Schriftgrad breit — genau so steht --lese
+     weiter unten.
+
+     Hier stand vorher 7,635px je 16px und --lese als eigene Formel. Beides
+     war falsch: die 7,635 waren ein Schaetzwert (12 % zu hoch), und zwei
+     getrennte Formeln koennen auseinanderlaufen. Gemessen ergab das 95
+     Zeichen je Zeile statt der vorhergesagten 85. Seit --lese aus --satz
+     faellt, ist die Zeilenlaenge an JEDER Fensterbreite dieselbe Zahl und
+     kann gar nicht mehr abdriften. Wer die 80 aendern will, aendert die 34. */
+  --satz:clamp(1rem, .9rem + .45vw, 1.3rem);
+  /* 390: 16,0px · 768: 17,9px · 1024: 19,0px · ab 1422: 20,8px (Kappe) */
+  --lese:calc(34 * var(--satz));
+  /* 390: 545px · 768: 607px · 1024: 646px · ab 1422: 707px — immer 80 Zeichen */
+
+  --neben:min(26rem, 19rem + 6.67vw);    /* 400px @1440 · 416px ab 1920 */
+  --luecke:clamp(2.5rem,5vw,5rem);
+  --breit:calc(var(--lese) + var(--luecke) + var(--neben) + 2 * var(--gut));
+
+  /* Fuer Baender, die ihren Hintergrund oder ihre Trennlinie ueber die volle
+     Breite ziehen und nur den Inhalt einruecken sollen: nicht das Element
+     zentrieren, sondern seine Polsterung rechnen. max() faengt den Fall ab,
+     dass das Fenster schmaler als --breit ist — dann bleibt es beim normalen
+     Gutter. `100%` loest hier gegen die Fensterbreite auf, weil body weder
+     Polsterung noch Rand hat. */
+  --rand:calc(max(0px, 100% - var(--breit)) / 2 + var(--gut));
+}
+
+/* ---------- Kopf ---------- */
+
+.page-top{
+  position:sticky;top:0;z-index:60;
+  display:flex;align-items:center;justify-content:space-between;gap:1.5rem;
+  padding:1.6rem var(--rand);
+  background:rgba(11,22,17,.86);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(251,241,224,.1);
+}
+.page-top .wordmark img{height:24px;width:auto}
+
+.page-nav{display:flex;gap:1.5rem;align-items:center}
+.page-nav a{
+  font-size:.6875rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+  text-decoration:none;color:rgba(251,241,224,.8);
+  padding:.4em 0;border-bottom:1px solid transparent;
+  transition:color .18s var(--ease-out),border-color .18s var(--ease-out);
+}
+.page-nav a:hover,.page-nav a[aria-current="page"]{color:var(--cream);border-color:var(--orange)}
+.page-nav a:focus-visible{outline:2px solid var(--orange);outline-offset:4px}
+
+/* ---------- Seitenkopf ---------- */
+
+.masthead{
+  position:relative;
+  padding:clamp(4rem,11vh,7.5rem) var(--rand) clamp(3rem,7vh,4.5rem);
+  overflow:hidden;
+}
+.masthead__inner{position:relative;z-index:2}
+.masthead .lede{margin-top:1.9rem}
+
+/* ---------- Artikelkopf ---------- */
+
+.artcover{position:relative;min-height:min(74svh,640px);display:flex;align-items:flex-end;overflow:hidden}
+/* Deckflaechen trugen das Bild bis 2026-09-18 als `background-image` und konnten
+   damit keine Auflaesungsstufen anbieten — das Telefon lud die 1600-px-Platte.
+   Jetzt liegt ein <img> mit srcset darin. Der Ausschnitt muss unveraendert
+   bleiben: `background-position:center 32%` bedeutet als `object-position`
+   dasselbe, die Prozentangabe verteilt in beiden Faellen den Ueberhang. Wer den
+   Wert aendert, verschiebt den Bildausschnitt auf 33 Seiten. */
+.artcover__bg{position:absolute;inset:0}
+.artcover__bg>img{
+  width:100%;height:100%;display:block;
+  object-fit:cover;object-position:center 32%;
+}
+/* Faktor 0,85 wie bei .beat__scrim — siehe Begruendung dort. */
+.artcover__scrim{
+  position:absolute;inset:0;
+  background:
+    linear-gradient(to top, rgba(11,22,17,.825) 4%, rgba(11,22,17,.612) 38%, rgba(11,22,17,.289) 72%),
+    linear-gradient(96deg, rgba(11,22,17,.612) 0%, rgba(11,22,17,.102) 62%);
+}
+.artcover__inner{position:relative;z-index:2;padding:0 var(--rand) clamp(2.5rem,6vh,4rem);width:100%}
+
+/* "Sportphysiotherapie" ist mit 19 Zeichen das laengste Wort, das auf dieser
+   Seite in einer Headline steht. .hl__line hat white-space:pre und
+   overflow:hidden (Rueckfallebene fuer die Scramble-Animation), kann also
+   nicht umbrechen: bei 320px Fenster lief das Wort 30px ueber die Kante und
+   wurde einfach abgeschnitten, bei 360px blieben 7px statt des Satzspiegels.
+   Eigene Stufe statt --hl-size global zu senken, weil das die Headlines auf
+   allen 42 Seiten verkleinern wuerde, um ein Wort auf einer unterzubringen.
+   Ab ~630px greift wieder --hl-size, min() nimmt dort den kleineren Wert. */
+@media (max-width:820px){
+  .artcover .hl--lang{font-size:min(var(--hl-size),7.6vw)}
+}
+
+.arttitle{
+  margin:0;
+  max-width:20ch;
+  font-weight:900;text-transform:uppercase;
+  font-size:clamp(1.75rem,3.6vw,3.25rem);
+  line-height:1.04;letter-spacing:-.022em;
+  color:var(--cream);
+  text-wrap:balance;
+}
+
+.artmeta{
+  margin:1.5rem 0 0;
+  display:flex;flex-wrap:wrap;gap:.5rem 1.4rem;
+  font-size:.6875rem;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(251,241,224,.78);
+}
+
+/* ---------- Fließtext ---------- */
+
+/* Der Satz bleibt auf Lesebreite — breiter zu setzen waere der bequeme, aber
+   falsche Weg. Stattdessen bekommt die freie Spalte rechts eine Aufgabe.
+   „Lesebreite" ist seit dem Satzspiegel-Umbau --lese und waechst mit der
+   Schrift mit; frueher stand hier ein festes 72ch. */
+.artbody{
+  display:grid;
+  /* Die zweite Spalte nimmt den Rest, statt auf 19rem festzustehen. Sonst
+     bleiben an der breitesten Stelle 8 px uebrig, die das Raster nicht
+     verteilt: die Seitenspalte endete bei 1121 px, der Block darunter bei
+     1129 px.
+     19rem bleibt dabei die UNTERGRENZE, nicht die feste Breite. Mit
+     minmax(0,1fr) zog die Textspalte ihre volle --lese an sich und drueckte
+     die Seitenspalte bei 1024 px auf 188 px zusammen: das Verzeichnis hat
+     dort nach jedem zweiten Wort umgebrochen. */
+  grid-template-columns:minmax(0,var(--lese)) minmax(19rem,1fr);
+  gap:var(--luecke);
+  max-width:var(--breit);
+  margin-inline:auto;
+  padding:0 var(--gut);
+}
+.artbody > .prose{padding-left:0;padding-right:0;max-width:none}
+
+/* Blogartikel haben genau einen Textblock, die Leistungs- und die
+   Sportphysio-Seite mehrere: Text, Vereine, Text, Fragen. Die duerfen nicht
+   einzeln ins Raster, sonst verteilt die automatische Platzierung sie
+   abwechselnd auf beide Spalten und der zweite Block stuende neben dem ersten
+   statt darunter. Sie kommen deshalb zusammen in .artmain, und .artbody hat
+   weiterhin genau zwei Kinder.
+   Der Umweg ueber einen Wrapper statt „grid-row:1 / -1" an der Seitenspalte
+   ist Absicht: -1 zaehlt nur bis zum Ende des ausdruecklichen Rasters, und das
+   ist hier eine Zeile. Die Spalte haette also nur neben dem ersten Block
+   geklebt und waere danach mitgescrollt. */
+.artmain{min-width:0}
+.artmain > .prose,
+.artmain > .faq,
+.artmain > .weiter{padding-left:0;padding-right:0;max-width:none}
+
+.artside{
+  padding-top:clamp(3rem,7vh,5rem);
+  align-self:start;position:sticky;top:6.5rem;
+}
+
+.toc{
+  border-top:1px solid rgba(251,241,224,.22);
+  padding-top:1.1rem;margin-bottom:2.2rem;
+}
+.toc__h{
+  margin:0 0 .9rem;
+  font-size:.625rem;font-weight:500;letter-spacing:.22em;text-transform:uppercase;
+  color:rgba(251,241,224,.45);
+}
+.toc__l{margin:0;padding:0;list-style:none;counter-reset:toc}
+.toc__l li{counter-increment:toc}
+.toc__l a{
+  display:grid;grid-template-columns:1.9em 1fr;gap:.2em;
+  padding:.42rem 0;
+  font-size:.8125rem;line-height:1.35;font-weight:300;
+  text-decoration:none;color:rgba(251,241,224,.78);
+  transition:color .22s var(--ease-out);
+}
+.toc__l a::before{
+  content:counter(toc,decimal-leading-zero);
+  font-weight:900;font-size:.625rem;color:rgba(251,241,224,.3);
+  font-variant-numeric:tabular-nums;padding-top:.22em;
+  transition:color .22s var(--ease-out);
+}
+@media (hover:hover){.toc__l a:hover{color:var(--cream)}}
+.toc__l a:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.toc__l a[aria-current="true"]{color:var(--cream)}
+.toc__l a[aria-current="true"]::before{color:var(--orange)}
+
+.artcard{border-top:1px solid rgba(251,241,224,.22);padding-top:1.1rem}
+.artcard__h{
+  margin:0 0 .7rem;
+  font-size:.625rem;font-weight:500;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--orange);
+}
+.artcard__t{margin:0 0 1rem;font-size:.8125rem;line-height:1.6;font-weight:300;color:rgba(251,241,224,.84)}
+.artcard__l{margin:0;padding:0;list-style:none}
+.artcard__l li + li{margin-top:.5rem}
+
+/* Gemessen (2026-10-07): diese drei Links waren 17 px hoch. Auf dem Telefon ist
+   das keine Klickflaeche, sondern ein Zielschiessen, und es traf genau die
+   Buchung. Die Hoehe kommt jetzt aus senkrechtem Polster.
+   Der Strich sitzt dabei auf text-decoration statt auf border-bottom: ein
+   border-bottom liegt an der UNTERKANTE des Kastens und waere durch das Polster
+   vom Wort abgerueckt - der Link saehe aus wie ein Kaestchen mit Bodenleiste.
+   text-underline-offset haengt den Strich am Text, egal wie hoch der Kasten ist. */
+.artcard__l a{
+  display:inline-block;
+  padding:.7rem 0;                       /* Zeile rund 20px + 2x11,2px = rund 42px */
+  font-size:.8125rem;font-weight:500;letter-spacing:.04em;
+  color:var(--cream);
+  text-decoration:underline;
+  text-decoration-color:rgba(251,241,224,.28);
+  text-decoration-thickness:1px;
+  text-underline-offset:.28em;
+  transition:text-decoration-color .22s var(--ease-out);
+}
+/* Das erste Element ist die Buchung, die beiden anderen sind Kontaktdaten. Als
+   gefuellter Knopf auf ganzer Kartenbreite ist der Unterschied sichtbar, ohne
+   dass man die Beschriftungen vergleichen muss. */
+.artcard__l li:first-child a{
+  display:block;text-align:center;
+  padding:.78rem 1rem;                   /* rund 44px */
+  font-weight:900;letter-spacing:.02em;text-transform:uppercase;
+  text-decoration:none;
+  background:var(--cream);color:var(--pine-black);
+  transition:background-color .18s var(--ease-out), color .18s var(--ease-out);
+}
+.artcard__l li:first-child + li{margin-top:.85rem}
+@media (hover:hover) and (pointer:fine){
+  .artcard__l a:hover{text-decoration-color:var(--orange)}
+  .artcard__l li:first-child a:hover{background:var(--orange);color:var(--pine-black)}
+}
+.artcard__l a:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+
+/* Unter 1024px trägt eine zweite Spalte nicht mehr: das Verzeichnis fällt weg
+   (der Text ist dann ohnehin einen Wisch entfernt), die Termin-Karte bleibt. */
+@media (max-width:1023px){
+  /* Faellt die zweite Spalte weg, schrumpft der Satzspiegel mit. Das hier ist
+     die eine Stelle, an der das passieren darf: --breit treibt ueber --rand
+     *alle* Baender, der Umbruch bleibt also an jeder Kante derselbe. Stuende
+     die Ausnahme stattdessen als `max-width` an .artbody, haetten Kopfzeile
+     und Faktenreihe weiter auf der Zweispalten-Breite gestanden und die Seite
+     bei 1023px zwei linke Kanten gehabt. */
+  body.page{--breit:calc(var(--lese) + 2 * var(--gut))}
+  .artbody{grid-template-columns:minmax(0,1fr)}
+  .artside{position:static;padding-top:2.5rem}
+  .toc{display:none}
+}
+
+/* Polsterung --rand, Deckel --lese + 2 * --rand: dadurch liegt die linke Kante
+   auf dem Satzspiegel und der Satz bleibt trotzdem genau --lese breit. Dieselbe
+   Rechnung steht bei .faq, .sources und .byline — alle vier sind Baender, die
+   auch ohne .artbody vorkommen koennen. Innerhalb von .artmain setzt die Regel
+   weiter unten Polsterung und Deckel ohnehin zurueck, dort fuehrt das Raster. */
+.prose{
+  padding:clamp(3rem,7vh,5rem) var(--rand) 0;
+  max-width:calc(var(--lese) + 2 * var(--rand));
+  font-size:var(--satz);
+  line-height:1.78;
+  font-weight:300;
+  color:rgba(251,241,224,.88);
+}
+.prose > p{margin:0 0 1.35em}
+.prose h2{
+  margin:2.9em 0 .9em;
+  font-size:clamp(1.1rem,1.8vw,1.5rem);
+  font-weight:900;text-transform:uppercase;letter-spacing:-.01em;line-height:1.2;
+  color:var(--cream);
+  padding-top:1.4rem;
+  border-top:1px solid rgba(251,241,224,.16);
+}
+.prose h2:first-child{margin-top:0}
+.prose h2[id]{scroll-margin-top:6rem}   /* der Seitenkopf klebt oben */
+.prose ul{margin:0 0 1.5em;padding:0;list-style:none}
+.prose li{position:relative;padding-left:1.5rem;margin-bottom:.75em}
+.prose li::before{
+  content:"";position:absolute;left:0;top:.72em;
+  width:9px;height:1.5px;background:var(--orange);
+}
+.prose strong{font-weight:500;color:var(--cream)}
+/* .tldr und .jetzt drehen den Grund um: dunkler Text auf Creme. Die Regel
+   darueber faerbt <strong> aber unbedingt creme — in diesen beiden Kaesten
+   stand das Wort damit creme auf creme und war schlicht unsichtbar (gemessen
+   auf programme.html: Wort und Grund beide rgb(251,241,224), Kontrast 1:1).
+   Aufgefallen ist es erst, als eine Seite fette Woerter in den Kasten setzte;
+   vorher lag der Fehler latent im System. Nicht alle <strong> auf
+   color:inherit umstellen: auf dunklem Grund laeuft der Fliesstext gedimmt,
+   und genau davon soll sich das fette Wort abheben. */
+.prose .tldr strong,
+.prose .jetzt strong{color:inherit;font-weight:600}
+
+/* Zitat der Referenz-Grammatik: keine Anführungsgrafik, nur Maßstabswechsel */
+.pull{
+  margin:2.4em 0;padding-left:1.4rem;
+  border-left:2px solid var(--orange);
+  font-size:clamp(1.05rem,1.7vw,1.375rem);
+  line-height:1.45;font-weight:300;font-style:normal;
+  color:var(--cream);
+}
+
+/* ---------- Kurz gesagt ---------- */
+
+.tldr{
+  margin:0 0 3rem;
+  background:var(--cream);color:var(--pine-black);
+  padding:1.7rem 1.9rem 1.9rem;
+}
+/* Dieses Etikett stand hier auf .6875rem/500 — gerendert hat es nie so.
+   ".tldr p" eine Zeile tiefer ist spezifischer (0,1,1 gegen 0,1,0) und hat
+   Groesse und Gewicht ueberschrieben: KURZ GESAGT lief seit jeher in
+   Fliesstextgroesse und mager. Genau dieser Zustand ist abgenommen, deshalb
+   wird er jetzt ausgeschrieben statt stillschweigend zurueckgebaut — nur eben
+   fett (2026-10-09). Der Doppelselektor ist Absicht: ohne ihn gewinnt wieder
+   ".tldr p". .jetzt__h traegt dieselben Werte; wer hier etwas aendert, aendert
+   es dort mit. */
+.tldr .tldr__label{
+  margin:0 0 .7rem;
+  font-size:calc(var(--satz) * .92);font-weight:700;
+  letter-spacing:.22em;text-transform:uppercase;
+  color:#8a5a12;
+}
+/* Der Kasten hat 1,9rem Innenpolster, die Zeile darin ist also schmaler als
+   die Lesespalte. Feste 1rem ergaben gemessen 104 Zeichen. Die 0,92 holt die
+   Polsterung wieder rein: --lese minus 2*1,9rem, geteilt durch 34. */
+.tldr p{margin:0;font-size:calc(var(--satz) * .92);line-height:1.62;font-weight:300}
+
+/* ---------- Hinweis auf eine kommende Seite ---------- */
+/* Bewusst NICHT im Creme-Ton von .tldr: der Kasten steht direkt darueber, und
+   zwei helle Bloecke uebereinander lesen sich als ein einziger. Dieser hier
+   bleibt auf dem dunklen Grund und markiert sich nur ueber die Linie links —
+   dieselbe Grammatik wie .pull, weil es eine Randnotiz ist und keine Aussage
+   ueber das Angebot.
+
+   Ohne Markennamen und ohne Domain, solange beides nicht entschieden ist:
+   "REHAB FIVE BUSINESS" ist ein Arbeitstitel, rehab-five-business.de ein
+   Kandidat. Ein Name in dieser Zeile waere eine Ankuendigung, die wir spaeter
+   zuruecknehmen muessen. */
+.bald{
+  margin:0 0 2.4rem;padding:.1rem 0 .1rem 1.4rem;
+  border-left:2px solid var(--orange);
+}
+.bald__h{
+  margin:0 0 .5rem;
+  font-size:.6875rem;font-weight:500;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--orange);
+}
+.bald__t{margin:0;font-size:calc(var(--satz) * .92);line-height:1.66;font-weight:300;color:rgba(251,241,224,.82)}
+.bald__t a{color:var(--cream);text-decoration:underline;text-underline-offset:.16em;text-decoration-thickness:1px}
+@media (hover:hover){
+  .bald__t a:hover{color:var(--orange)}
+}
+.bald__t a:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+
+/* ---------- FAQ ---------- */
+
+.faq{padding:clamp(3.5rem,8vh,5.5rem) var(--rand);max-width:calc(var(--lese) + 2 * var(--rand))}
+.faq__list{margin:2rem 0 0;border-top:1px solid rgba(251,241,224,.16)}
+.faq details{border-bottom:1px solid rgba(251,241,224,.16)}
+.faq summary{
+  list-style:none;cursor:pointer;
+  padding:1.15rem 2.5rem 1.15rem 0;position:relative;
+  font-size:clamp(.95rem,1.25vw,1.0625rem);font-weight:500;line-height:1.4;
+  color:var(--cream);
+}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{
+  content:"";position:absolute;right:.4rem;top:50%;
+  width:11px;height:11px;margin-top:-6px;
+  border-right:1.5px solid var(--orange);border-bottom:1.5px solid var(--orange);
+  transform:rotate(45deg);transition:transform .28s var(--ease-out);
+}
+.faq details[open] summary::after{transform:rotate(-135deg)}
+.faq summary:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+/* Feste 0,9375rem waren bei voller Lesespalte gemessen 121 Zeichen je Zeile —
+   der laengste Satz der ganzen Seite, ausgerechnet in der Antwort, die jemand
+   wirklich liest. Die 0,94 gleicht das rechte Polster von 2,5rem aus. */
+.faq__a{margin:0;padding:0 2.5rem 1.4rem 0;font-size:calc(var(--satz) * .94);line-height:1.72;font-weight:300;color:rgba(251,241,224,.9)}
+
+/* Eine Angabe, die uns fehlt, steht sichtbar als Luecke da. Eine erfundene
+   Wartezeit merkt niemand — bis jemand deswegen anruft. */
+.fehlt{
+  font-style:normal;font-size:.8125rem;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(251,241,224,.42);
+}
+
+/* ---------- Termin-Aufruf im Fliesstext ---------- */
+/* Anlass (2026-10-07), gemessen statt vermutet: Auf dem Telefon stand die ERSTE
+   Buchungsmoeglichkeit bei 77 bis 88 % der Seitenlaenge. Grund ist nicht ein
+   Mangel an Knoepfen, sondern die Reihenfolge im Dokument: .artside steht nach
+   .artmain, auf dem Desktop liegt die Terminkarte damit bei 16 bis 20 %, unter
+   1024 px faellt die Spalte aber unter den Text. Wer auf dem Handy liest, hat
+   800 bis 1200 Woerter hinter sich, bevor er buchen kann.
+
+   Dieser Block setzt eine Gelegenheit in die Mitte des Textes. Bewusst
+   zurueckhaltend und NICHT als dritter Stil: der Kasten uebernimmt Creme-Grund
+   und Polsterung von .tldr, die Knoepfe die Grossschrift von .cta. Eine Seite
+   mit drei verschiedenen Knopfsprachen wirkt nicht dringlicher, sondern
+   unaufgeraeumt.
+
+   Kein klebendes Band am unteren Rand: DocMedico setzt dort bereits seinen
+   eigenen Knopf ab. Ein zweites fest stehendes Element daneben verdeckt auf
+   kleinen Geraeten den Text und kollidiert mit fremdem Markup, das wir nicht
+   kontrollieren. */
+
+.jetzt{
+  margin:3rem 0;
+  background:var(--cream);color:var(--pine-black);
+  padding:1.6rem 1.9rem 1.8rem;
+}
+/* Gleiche Groesse, gleiche Sperrung, gleiches Fett wie .tldr__label — siehe
+   die Begruendung dort. Absichtlich ausgeschrieben statt per Sammelselektor:
+   die beiden Kaesten stehen weit auseinander im Stylesheet, und ein geteilter
+   Selektor haette den Kommentar von genau einer der beiden Stellen
+   weggenommen. */
+.jetzt__h{
+  margin:0 0 .55rem;
+  font-size:calc(var(--satz) * .92);font-weight:700;
+  letter-spacing:.22em;text-transform:uppercase;
+  color:#8a5a12;
+}
+/* Wie .tldr p: der Kasten hat 1,9rem Innenpolster, die Zeile darin ist also
+   schmaler als die Lesespalte. Die 0,92 holt die Polsterung wieder rein. */
+.jetzt__t{margin:0 0 1.15rem;font-size:calc(var(--satz) * .92);line-height:1.62;font-weight:300}
+.jetzt__l{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.6rem}
+/* Der Kasten steht IM Fliesstext, also greift .prose li mit seinem orangenen
+   Strich und seinem Einzug. Vor einem Knopf sieht ein Aufzaehlungsstrich aus
+   wie ein Fehler. Beides hier zuruecknehmen. */
+.jetzt__l li{position:static;padding-left:0;margin-bottom:0;display:flex}
+.jetzt__l li::before{display:none}
+.jetzt__l a{
+  display:inline-block;
+  font-weight:900;font-size:clamp(1.05rem,1.6vw,1.3rem);
+  letter-spacing:-.01em;text-transform:uppercase;text-decoration:none;
+  /* 0,75rem senkrecht ergeben mit der Zeilenhoehe rund 44 px Klickflaeche.
+     Der Prueflauf meldet alles unter 36 px; 44 ist die Zahl, auf die sich
+     Apple und Google unabhaengig voneinander geeinigt haben. */
+  padding:.75rem 1.15rem;
+  border:1px solid var(--pine-black);
+  color:var(--pine-black);background:transparent;
+  transition:color .18s var(--ease-out), background-color .18s var(--ease-out);
+}
+/* li:first-child a, nicht a:first-child. Jedes a sitzt allein in seinem li und
+   ist dort immer das erste Kind, der kuerzere Selektor faerbte also BEIDE
+   Knoepfe und hob genau die Rangfolge auf, die er herstellen sollte.
+   Aufgefallen beim Auslesen der berechneten Stile, nicht im Bild: zwei gefuellte
+   Knoepfe nebeneinander sehen nicht falsch aus, nur gleichwertig. */
+.jetzt__l li:first-child a{background:var(--pine-black);color:var(--cream)}
+@media (hover:hover) and (pointer:fine){
+  .jetzt__l a:hover{background:var(--orange);border-color:var(--orange);color:var(--pine-black)}
+}
+.jetzt__l a:focus-visible{outline:2px solid #8a5a12;outline-offset:3px}
+
+/* Unter 420 px nebeneinander waere jeder Knopf schmaler als sein Wort. Dann
+   aber auf volle Breite: zwei unterschiedlich breite Kaesten untereinander
+   haben keine gemeinsame Kante und sehen aus wie zwei Zufaelle. */
+@media (max-width:420px){
+  .jetzt__l{flex-direction:column}
+  .jetzt__l li{display:block}
+  .jetzt__l a{display:block;text-align:center}
+}
+
+/* ---------- Knopfpaar im dunklen Seitenkopf ---------- */
+/* Sechs Seiten haben keinen Fliesstext und konnten den Kasten oben deshalb nicht
+   aufnehmen: Startseite, die beiden Standorte, Leistungs-, Blog- und
+   Teamuebersicht. Gemessen lag die erste Buchungsmoeglichkeit dort bei 77 bis
+   93 % — auf der Startseite am spaetesten, also ausgerechnet dort, wo die
+   meisten ankommen.
+
+   Warum eine zweite Form und nicht derselbe Kasten: Die Koepfe stehen auf einem
+   abgedunkelten Foto. Ein cremefarbener Block mittendrin zerschneidet das Bild
+   und saehe aus wie ein Einschub, der dort nicht hingehoert. Zwei Knoepfe
+   liegen auf dem Scrim auf, ohne ihn zu zerteilen.
+
+   Die Rangfolge steckt in der Farbe, nicht in der Groesse: gefuellt ist die
+   Buchung, umrandet der Anruf. Gleich gross waeren beide, und der Blick muesste
+   lesen statt sehen. */
+
+.rufe{
+  list-style:none;margin:1.9rem 0 0;padding:0;
+  display:flex;flex-wrap:wrap;gap:.6rem;
+}
+.rufe a{
+  display:inline-block;
+  font-weight:900;font-size:clamp(.95rem,1.4vw,1.1rem);
+  letter-spacing:.01em;text-transform:uppercase;text-decoration:none;
+  padding:.8rem 1.3rem;                 /* ergibt rund 46px Klickflaeche */
+  border:1px solid var(--cream);
+  color:var(--cream);background:transparent;
+  transition:color .18s var(--ease-out), background-color .18s var(--ease-out), border-color .18s var(--ease-out);
+}
+.rufe li:first-child a{background:var(--cream);color:var(--pine-black)}   /* siehe oben */
+@media (hover:hover) and (pointer:fine){
+  .rufe a:hover{background:var(--orange);border-color:var(--orange);color:var(--pine-black)}
+}
+.rufe a:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+
+@media (max-width:420px){
+  .rufe{flex-direction:column}
+  .rufe li{display:block}
+  .rufe a{display:block;text-align:center}
+}
+
+/* Im Heldenbild der Startseite steht darueber schon die Saeulen-Liste. Ohne die
+   knappere Kappe reicht die Hoehe auf einem 844px-Geraet nicht mehr. */
+.beat .rufe{margin-top:1.4rem}
+
+/* ---------- Leistungspositionen ---------- */
+/* Kein Icon-Raster, keine Karten: das hier ist eine Liste dessen, was auf einem
+   Rezept stehen kann. Die Abrechnungsposition ist die Ueberschrift, weil genau
+   danach gesucht wird — „KG am Geraet", nicht „Trainingstherapie". */
+
+.prose .pos{margin:0 0 2.6em;padding:0;list-style:none;border-top:1px solid rgba(251,241,224,.16)}
+.prose .pos__i{
+  padding:1.25rem 0;margin:0;
+  border-bottom:1px solid rgba(251,241,224,.16);
+  display:grid;grid-template-columns:minmax(11rem,22%) 1fr;gap:.4rem 2rem;
+  align-items:baseline;
+}
+.prose .pos__i::before{display:none}
+.pos__n{
+  font-weight:900;text-transform:uppercase;letter-spacing:-.005em;line-height:1.24;
+  font-size:.9375rem;color:var(--cream);
+}
+.pos__t{font-weight:300;line-height:1.7;color:rgba(251,241,224,.9)}
+
+.pos__k{
+  display:inline-block;margin-left:.4rem;padding:.1rem .4rem;
+  border:1px solid rgba(217,145,41,.55);border-radius:2px;
+  font-size:.6875rem;font-weight:500;letter-spacing:.08em;color:var(--orange-lt);
+}
+.pos__l{
+  display:inline-block;margin-left:.35rem;white-space:nowrap;
+  color:var(--orange-lt);text-decoration:none;
+  border-bottom:1px solid rgba(217,145,41,.4);
+}
+.pos__l:hover{border-bottom-color:var(--orange-lt)}
+
+@media (max-width:760px){
+  .prose .pos__i{grid-template-columns:1fr;gap:.45rem}
+}
+
+/* ---------- Inline-Bild im Fliesstext ---------- */
+
+.bild{margin:2.8em 0;padding:0}
+.bild img{display:block;width:100%;height:auto;border-radius:2px}
+.bild figcaption{
+  margin-top:.7rem;font-size:.8125rem;line-height:1.6;font-weight:300;
+  color:rgba(251,241,224,.5);
+}
+
+/* ---------- Weitere Leistungen ---------- */
+
+/* Dieselbe Breite wie .artbody, nicht breiter und nicht schmaler. Der Block
+   steht direkt unter dem Artikel, und vorher endete er bei 961 px, waehrend der
+   Artikel daneben bis 1121 px lief: drei verschiedene rechte Kanten auf einer
+   Seite. Seit beide auf --breit stehen, kann das nicht mehr auseinanderlaufen —
+   frueher musste man zwei Rechnungen von Hand gleich halten. */
+.weiter{padding:clamp(3.5rem,8vh,6rem) var(--gut) 0;
+        max-width:var(--breit);margin-inline:auto}
+/* Die frueher hier stehende Sonderregel fuer unter 1024px ist entfallen: dass
+   der Block beim Umbruch auf eine Spalte mitgeht, erledigt jetzt --breit, das
+   in derselben Abfrage einmal zentral schrumpft. Es war die zweite von zwei
+   Rechnungen, die man von Hand gleich halten musste. */
+.weiter__h{
+  margin:0 0 1.6rem;padding-top:1.4rem;border-top:1px solid rgba(251,241,224,.18);
+  font-size:.75rem;font-weight:900;text-transform:uppercase;letter-spacing:.16em;
+  color:rgba(251,241,224,.5);
+}
+.weiter__l{margin:0;padding:0;list-style:none;display:grid;gap:.5rem;
+  grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
+.weiter__l a{
+  display:flex;align-items:baseline;justify-content:space-between;gap:1rem;
+  padding:1rem 1.1rem;text-decoration:none;
+  background:rgba(251,241,224,.045);border:1px solid rgba(251,241,224,.1);border-radius:2px;
+  transition:background .3s var(--ease-out),border-color .3s var(--ease-out);
+}
+.weiter__l a:hover{background:rgba(251,241,224,.09);border-color:rgba(217,145,41,.5)}
+.weiter__l span{font-weight:500;font-size:.9375rem;line-height:1.3;color:var(--cream)}
+.weiter__l i{font-style:normal;font-size:.6875rem;letter-spacing:.08em;color:var(--orange-lt)}
+.weiter__all{margin:1.6rem 0 0;font-size:.875rem;font-weight:300}
+.weiter__all a{color:var(--orange-lt);text-decoration:none;border-bottom:1px solid rgba(217,145,41,.4)}
+.weiter__all a:hover{border-bottom-color:var(--orange-lt)}
+
+/* Vereinskarten mit Logo hinter dem Namen. Eigene Stufe statt .weiter__l
+   anzufassen: dieselbe Liste traegt auf 42 Seiten die Leistungen, dort steht
+   kein Bild drin. Das Plaettchen ist weiss und nicht cream, weil die vier
+   Logos unterschiedlich gebaut sind: UBC bringt einen deckend weissen Grund
+   mit (verschmilzt nur auf Weiss), der Preussen-Adler ist schwarz auf
+   transparent und waere auf dem Pine-Grund fast unsichtbar, RVM ist weiss
+   plus Marineblau. Auf Weiss lesen alle vier, gegengeprueft am Kontaktabzug.
+   Dateien sind 64px fuer 34px Anzeige, also genau 2x fuer Retina. */
+/* Breitere Spalten als die Leistungsliste: in die geerbten 15rem passt
+   "Ruderverein Muenster von 1882" plus Plaettchen nicht in eine Zeile. Die
+   Sportart klappt dann nach unten, und zwar nicht bei allen vier Karten, was
+   die Reihe schief aussehen laesst.
+   Der Wert haengt am Satzspiegel und wurde am 05.10.2026 nachgezogen: solange
+   die Liste ueber 865px lief, ergaben 20rem zwei Spalten zu 428px und damit
+   vier einzeilige Karten. Seit sie in der Textspalte steht, sind es 649px,
+   dieselben 20rem ergaeben zwei Spalten zu 320px, und der Ruderverein bricht
+   wieder um. 22rem laesst sie deshalb einspaltig laufen: vier volle Zeilen,
+   alle gleich hoch. Wer die Textspalte wieder verbreitert, misst hier nach. */
+.weiter__l--v{grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr))}
+.weiter__l--v a{align-items:center;flex-wrap:wrap;row-gap:.45rem}
+.weiter__l--v .vl__n{display:flex;align-items:center;gap:.55rem;min-width:0}
+.vl__logo{flex:0 0 auto;width:34px;height:34px;padding:3px;box-sizing:border-box;
+  background:#fff;border-radius:2px}
+
+/* ---------- Leistungsuebersicht ---------- */
+
+.lkarten{
+  margin:0;padding:clamp(2.5rem,6vh,4rem) var(--rand) 0;list-style:none;
+  display:grid;gap:clamp(1rem,2vw,1.75rem);
+  grid-template-columns:repeat(auto-fit,minmax(min(22rem,100%),1fr));
+}
+.lkarte a{display:block;text-decoration:none;color:inherit}
+.lkarte__b{display:block;overflow:hidden;border-radius:2px;background:var(--pine)}
+.lkarte__b img{
+  display:block;width:100%;height:auto;
+  transition:transform .7s var(--ease-out),opacity .4s var(--ease-out);
+  opacity:.82;
+}
+.lkarte a:hover .lkarte__b img{transform:scale(1.04);opacity:1}
+.lkarte__t{display:block;padding:1.1rem 0 0}
+.lkarte__n{
+  display:block;font-weight:900;text-transform:uppercase;font-size:1rem;line-height:1.22;
+  letter-spacing:-.01em;color:var(--cream);
+}
+.lkarte__n i{
+  font-style:normal;font-size:.6875rem;font-weight:500;letter-spacing:.08em;
+  color:var(--orange-lt);margin-left:.4rem;vertical-align:.12em;
+}
+.lkarte__x{
+  display:block;margin-top:.5rem;font-size:.875rem;line-height:1.65;font-weight:300;
+  color:rgba(251,241,224,.72);
+}
+
+/* ---------- Quellen & Autor ---------- */
+
+.sources{padding:0 var(--rand) 1rem;max-width:calc(var(--lese) + 2 * var(--rand))}
+.sources ol{margin:1.2rem 0 0;padding-left:1.2rem;font-size:.8125rem;line-height:1.7;color:rgba(251,241,224,.72)}
+.sources li{margin-bottom:.7em}
+
+/* Unten stand 0. Direkt darunter beginnt .tail mit seiner Trennlinie — gemessen
+   lagen zwischen Portraitunterkante und Linie 6 Pixel, oben 39. Der Autor klebte
+   damit an der Linie. Jetzt beidseitig 3rem; gemessen rund 54 oben zu 54 unten
+   (2026-10-09). */
+.byline{
+  display:flex;align-items:center;gap:1rem;
+  padding:3rem var(--rand);max-width:calc(var(--lese) + 2 * var(--rand));
+}
+.byline img{width:52px;height:52px;border-radius:50%;object-fit:cover;object-position:center 18%}
+.byline__txt{font-size:.8125rem;line-height:1.5;color:rgba(251,241,224,.78)}
+.byline__txt b{display:block;font-weight:500;color:var(--cream);letter-spacing:.02em}
+
+/* ---------- Blog-Übersicht ---------- */
+
+/* ---------- Blog-Übersicht: Aufmacher + Leisten ---------- */
+/* Der Aufmacher ist der Kopf der Seite: eine Titelseite hat keine Ueberschrift
+   ueber der Ueberschrift. Darunter die Artikel in waagerechten Leisten,
+   nach Koerperregion. */
+
+/* Der Aufmacher bekommt nicht den ganzen Bildschirm, sondern den Rest.
+   Vorher stand hier 84svh — gemessen blieb davon auf dem Laptop 11px und auf
+   dem Handy 10px fuer alles Weitere uebrig, also null Pixel einer Artikelkarte.
+   Die Seite endete optisch am Aufmacher. Jetzt sind unten 21rem reserviert
+   (Kopfleiste ~7.5rem + Leistenkopf ~5.5rem + 8rem angeschnittene Karte), und
+   der Aufmacher nimmt, was uebrig bleibt. Die angeschnittene Karte ist das
+   ehrlichste Weiter-Zeichen, das es gibt: kein Symbol fuer Inhalt, sondern
+   Inhalt. */
+/* "stretch" statt "flex-end": .lead__inner spannt damit die ganze Karte auf
+   und richtet seinen Inhalt selbst unten aus. Sichtbar aendert das nichts —
+   aber die Klickflaeche des Titel-Links (.lead__link::after, inset:0 gegen
+   .lead__inner) deckt so die ganze Karte statt nur den Textblock. */
+.lead{
+  position:relative;display:flex;align-items:stretch;
+  min-height:clamp(20rem, calc(100svh - 21rem), 44rem);overflow:hidden;
+}
+/* Wie .artcover__bg — siehe Begruendung dort. Der Zoom beim Ueberfahren bleibt
+   auf dem div: das <img> darin faehrt mit, und die Transition muss nur eine
+   Ebene bewegen statt einen Hintergrund neu zu rastern. */
+.lead__bg{
+  position:absolute;inset:0;
+  transition:transform 1.2s var(--ease-out);
+}
+.lead__bg>img{
+  width:100%;height:100%;display:block;
+  object-fit:cover;object-position:center 28%;
+}
+/* Faktor 0,85 wie bei .beat__scrim — siehe Begruendung dort. */
+.lead__scrim{
+  position:absolute;inset:0;
+  background:
+    linear-gradient(96deg, rgba(11,22,17,.799) 0%, rgba(11,22,17,.697) 32%, rgba(11,22,17,.289) 64%, rgba(11,22,17,.425) 100%),
+    linear-gradient(to top, rgba(11,22,17,.731) 0%, rgba(11,22,17,0) 48%);
+}
+.lead__inner{
+  position:relative;z-index:2;width:100%;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:0 var(--rand) clamp(2.6rem,6vh,4.4rem);
+}
+.lead__more{
+  margin:1.9rem 0 0;
+  font-size:.625rem;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(251,241,224,.72);
+}
+.lead__more span{color:var(--orange)}
+/* Der Titel traegt den Link, die Flaeche davor macht die ganze Karte
+   anklickbar. Die Knoepfe muessen darueber liegen, sonst faengt die Flaeche
+   den Tipp auf "Termin buchen" ab — genau dafuer stehen die z-index. */
+.lead__link{color:inherit;text-decoration:none}
+.lead__link::after{content:"";position:absolute;inset:0;z-index:1}
+.lead .rufe{position:relative;z-index:2}
+.lead__link:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+@media (hover:hover){.lead:hover .lead__bg{transform:scale(1.04)}}
+
+/* Die Artikel stehen in einer Leiste, nicht in einem Raster mit fester
+   Spaltenzahl. Ein Raster laesst bei jeder Artikelzahl, die nicht aufgeht,
+   eine Zelle leer — eine Leiste traegt beliebig viele. */
+.rail-wrap{
+  border-top:1px solid rgba(251,241,224,.14);
+  margin-bottom:clamp(4rem,9vh,6rem);
+}
+/* Sprungleiste: die fünf Bereiche stehen einmal beieinander, bevor man sich
+   durch fünf Leisten scrollt. Ohne sie ist die Gliederung erst nach dem
+   Durchscrollen erkennbar. */
+.rubriken{
+  display:flex;flex-wrap:wrap;gap:.6rem;
+  padding:2.2rem var(--rand) 2.6rem;
+  border-top:1px solid rgba(251,241,224,.14);
+}
+.rubriken a{
+  display:inline-flex;align-items:baseline;gap:.6em;
+  padding:.72em 1.15em;
+  border:1px solid rgba(251,241,224,.2);border-radius:100px;
+  font-size:.75rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;
+  text-decoration:none;color:rgba(251,241,224,.9);
+  transition:color .25s var(--ease-out),border-color .25s var(--ease-out),
+             background-color .25s var(--ease-out);
+}
+.rubriken__n{
+  font-weight:900;font-size:.6875rem;color:var(--orange);
+  font-variant-numeric:tabular-nums;
+}
+@media (hover:hover){
+  .rubriken a:hover{background:var(--cream);border-color:var(--cream);color:var(--pine-black)}
+  .rubriken a:hover .rubriken__n{color:var(--pine-black)}
+}
+.rubriken a:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+
+.rail__head{
+  display:flex;align-items:baseline;justify-content:space-between;gap:1rem;
+  padding:2.4rem var(--rand) 1.5rem;
+}
+/* Vorher 11px in halber Deckkraft — die Gliederung des Blogs war damit leiser
+   als die Artikeltitel darunter. Jetzt trägt sie. */
+.rail__t{
+  margin:0;font-size:clamp(1.5rem,3vw,2.1rem);font-weight:900;line-height:1;
+  letter-spacing:-.005em;text-transform:uppercase;color:var(--cream);
+  scroll-margin-top:6.5rem;   /* der Seitenkopf klebt oben und würde sonst die Zeile verdecken */
+}
+.rail__n{
+  margin:.15em auto 0 .45rem;align-self:flex-start;
+  font-size:.8125rem;font-weight:900;letter-spacing:.06em;
+  color:var(--orange);font-variant-numeric:tabular-nums;
+}
+.rail__n::after{content:" Artikel";font-weight:300;color:rgba(251,241,224,.42);letter-spacing:.12em;
+  font-size:.625rem;text-transform:uppercase}
+.rail__nav{display:flex;gap:.5rem}
+.rail__btn{
+  width:2.75rem;height:2.75rem;display:grid;place-items:center;
+  background:none;color:var(--cream);cursor:pointer;
+  border:1px solid rgba(251,241,224,.22);border-radius:50%;
+  transition:border-color .3s var(--ease-out),background-color .3s var(--ease-out),
+             color .3s var(--ease-out),opacity .3s var(--ease-out);
+}
+.rail__btn svg{width:1.05rem;height:1.05rem;display:block}
+.rail__btn:disabled{opacity:.28;cursor:default}
+.rail__btn:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+@media (hover:hover){
+  .rail__btn:not(:disabled):hover{
+    background:var(--orange);border-color:var(--orange);color:var(--pine-black);
+  }
+}
+
+.rail{
+  --blende-l:0px;--blende-r:0px;
+  display:flex;gap:0;
+  overflow-x:auto;overscroll-behavior-x:contain;
+  scroll-snap-type:x proximity;
+  scroll-padding-left:var(--rand);
+  padding-left:var(--rand);
+  border-top:1px solid rgba(251,241,224,.14);
+  scrollbar-width:none;
+  /* Der Anschnitt an den Raendern sagt ohne Worte, dass die Leiste weitergeht. */
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 var(--blende-l),
+                     #000 calc(100% - var(--blende-r)),transparent 100%);
+          mask-image:linear-gradient(90deg,transparent 0,#000 var(--blende-l),
+                     #000 calc(100% - var(--blende-r)),transparent 100%);
+}
+.rail::-webkit-scrollbar{display:none}
+.rail:focus-visible{outline:2px solid var(--orange);outline-offset:-2px}
+/* Abstandhalter statt padding-right: das rechte Innenpolster einer Flex-Leiste
+   fiel in aelteren Browsern beim Scrollen unter den Tisch.
+   Hier bewusst --gut statt --rand: in --rand steckt ein Prozentwert, und
+   Prozente in flex-basis beziehen sich auf die Inhaltsbreite der Leiste
+   (Fenster minus linkes Polster), nicht aufs Fenster. --rand ergaebe hier
+   also eine andere Zahl als an jeder anderen Kante. Die Luecke am Scroll-Ende
+   sieht ohnehin niemand neben dem Seitenkopf — die linke Kante schon. */
+.rail::after{content:"";flex:0 0 var(--gut)}
+
+.rail__bar{
+  height:1px;margin:0 var(--rand);
+  background:rgba(251,241,224,.14);overflow:hidden;
+}
+.rail__fill{
+  display:block;height:100%;width:100%;
+  background:var(--orange);transform-origin:0 50%;
+  transition:transform .12s linear;
+}
+
+.qc{
+  flex:0 0 clamp(15.5rem,23vw,20.5rem);
+  scroll-snap-align:start;
+  display:flex;flex-direction:column;
+  background:var(--pine-black);text-decoration:none;color:inherit;
+  padding-bottom:1.7rem;
+  border-right:1px solid rgba(251,241,224,.14);
+  transition:background-color .3s var(--ease-out);
+}
+.qc:focus-visible{outline:2px solid var(--orange);outline-offset:-2px}
+.qc__img{display:block;overflow:hidden;aspect-ratio:16/10;background:var(--pine)}
+.qc__img img{
+  width:100%;height:100%;object-fit:cover;filter:saturate(.9);
+  transition:transform .55s var(--ease-out);
+}
+.qc__ind{
+  display:block;padding:1.35rem 1.4rem .75rem;
+  font-size:.625rem;font-weight:500;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--orange);
+}
+.qc__t{
+  display:block;padding:0 1.4rem;
+  font-weight:500;font-size:clamp(1.0625rem,1.35vw,1.1875rem);line-height:1.26;
+  color:var(--cream);text-wrap:balance;
+}
+.qc__meta{
+  display:block;margin-top:auto;padding:1.3rem 1.4rem 0;
+  font-size:.625rem;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(251,241,224,.42);
+}
+@media (hover:hover){
+  .qc:hover{background:var(--pine)}
+  .qc:hover .qc__img img{transform:scale(1.045)}
+}
+@media (max-width:600px){
+  .qc{flex-basis:76vw}
+  .rail__head{padding-top:1.25rem}
+  .rail__nav{display:none}   /* auf dem Touchscreen wischt man ohnehin */
+}
+
+
+/* ---------- Team: Galerie ---------- */
+
+/* Die Reihe laeuft rechts aus dem Bild statt am Rand zu enden — das zeigt
+   ohne Beschriftung, dass da noch mehr kommt. */
+/* Zwei Achsen, zwei Leisten: Bereich oben, Standort darunter. Sie schneiden
+   sich, deshalb dürfen sie nicht wie eine lange Reihe aussehen. */
+.teamfilter{
+  display:flex;flex-wrap:wrap;gap:.6rem;
+  padding:0 var(--rand) 2.2rem;
+}
+.teamfilter:not(.teamfilter--ort){padding-bottom:.7rem}
+.teamfilter--ort button{border-style:dashed}
+.teamfilter--ort button[aria-pressed="true"]{border-style:solid}
+/* Kombination ohne Treffer: der Knopf bleibt lesbar, ist aber kein Angebot mehr. */
+.teamfilter button[disabled]{opacity:.3;cursor:default}
+.teamfilter button{
+  display:inline-flex;align-items:baseline;gap:.6em;
+  padding:.72em 1.15em;cursor:pointer;
+  background:none;border:1px solid rgba(251,241,224,.2);border-radius:100px;
+  font:inherit;font-size:.75rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(251,241,224,.9);
+  transition:color .25s var(--ease-out),border-color .25s var(--ease-out),
+             background-color .25s var(--ease-out);
+}
+.teamfilter__n{font-weight:900;font-size:.6875rem;color:var(--orange);font-variant-numeric:tabular-nums}
+@media (hover:hover){
+  .teamfilter button:hover{border-color:var(--cream);color:var(--cream)}
+}
+.teamfilter button[aria-pressed="true"]{background:var(--cream);border-color:var(--cream);color:var(--pine-black)}
+.teamfilter button[aria-pressed="true"] .teamfilter__n{color:var(--pine-black)}
+.teamfilter button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+
+/* Auf dem Handy brauchten die beiden Leisten umgebrochen sechs Zeilen — man
+   scrollte an zweihundert Pixeln Knoepfen vorbei, bevor das erste Gesicht kam.
+   Je Achse eine Zeile, die seitlich wegläuft: dieselbe Geste wie die Galerie
+   darunter, und die Reihe faengt oben im Bild an. */
+
+/* Gemessen am 22.09.2026 auf dem Handy: von sechs Bereichs-Knoepfen stehen vier
+   ausserhalb des Bildes, von vier Standort-Knoepfen drei. Erreichbar sind alle
+   (nachgewiesen), aber der Schnitt sass hart an der Bildkante — das sieht nach
+   abgeschnitten aus, nicht nach "geht weiter". Deshalb eine weiche Kante.
+   Wo Scroll-Zeitleisten da sind, zieht sie sich am jeweiligen Ende zurueck,
+   damit nicht der letzte Knopf selbst angefressen wirkt. */
+@property --kanteL{syntax:'<length>';inherits:false;initial-value:0px}
+@property --kanteR{syntax:'<length>';inherits:false;initial-value:0px}
+@keyframes teamfilter-kante{
+  0%  {--kanteL:0px;    --kanteR:2.6rem}
+  7%  {--kanteL:1.5rem; --kanteR:2.6rem}
+  93% {--kanteL:1.5rem; --kanteR:2.6rem}
+  100%{--kanteL:1.5rem; --kanteR:0px}
+}
+@media (max-width:767px){
+  .teamfilter{
+    flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;
+    padding-bottom:1.4rem;
+    /* Rueckfall ohne Scroll-Zeitleiste: die Kante ist genau so breit wie der
+       rechte Innenrand der Zeile. Steht die Reihe am Ende, liegt sie also nur
+       ueber leerem Rand und ist unsichtbar; mitten im Weg weicht sie den
+       angeschnittenen Knopf auf. */
+    --kanteL:0px;--kanteR:var(--gut);
+    -webkit-mask-image:linear-gradient(to right,
+      transparent 0,#000 var(--kanteL),
+      #000 calc(100% - var(--kanteR)),transparent 100%);
+    mask-image:linear-gradient(to right,
+      transparent 0,#000 var(--kanteL),
+      #000 calc(100% - var(--kanteR)),transparent 100%);
+  }
+  @supports (animation-timeline:scroll()){
+    .teamfilter{
+      --kanteR:2.6rem;
+      animation:teamfilter-kante linear both;
+      animation-timeline:scroll(self inline);
+    }
+  }
+  .teamfilter::-webkit-scrollbar{display:none}
+  .teamfilter button{flex:0 0 auto}
+}
+
+.gal{padding:0 0 clamp(2rem,5vh,3rem)}
+.member[hidden]{display:none}
+/* Bezugsrahmen fuer die beiden Pfeile. Sie standen bis zum 05.10.2026 unten in
+   der Hinweiszeile, der rechte also genau in der Ecke, in der die
+   DocMedico-Rezeption parkt — dort war er schlicht verdeckt. Aric: „da klickt
+   man ja unten rechts, das geht ein bisschen unter". */
+.gal__buehne{position:relative}
+.gal__rail{
+  --karte:clamp(14rem,26vw,23rem);
+  display:flex;gap:clamp(.9rem,1.8vw,1.6rem);
+  /* Die aktive Person steht in der Mitte, nicht am linken Rand. Die Einrueckung
+     ist deshalb genau so breit, dass auch die erste und die letzte Karte dort
+     hinkommen — sonst waeren Anfang und Ende der Reihe nie scharf gestellt. */
+  padding:0 calc(50% - var(--karte)/2) 1.4rem;
+  overflow-x:auto;overscroll-behavior-x:contain;
+  scroll-snap-type:x mandatory;
+  scrollbar-width:none;
+  cursor:grab;
+  /* Bezugspunkt fuer offsetLeft der Karten: js/team.js rechnet in Layout-
+     Koordinaten, weil die gedrehten Boxen selbst keine brauchbaren liefern. */
+  position:relative;
+}
+.gal__rail::-webkit-scrollbar{display:none}
+.gal__rail.is-zieht{cursor:grabbing;scroll-snap-type:none}
+.gal__rail:focus-visible{outline:2px solid var(--orange);outline-offset:-2px}
+
+/* Drei Zustaende, nicht einer. Welcher gilt, kann nur js/team.js entscheiden —
+   es haengt an der Zahl der gefilterten Personen und an der Fensterbreite.
+
+   „reihe"  — der Normalfall: mehr Personen als ins Bild passen.
+   „gruppe" — alle passen nebeneinander. Dann ist alles falsch, was eine Reihe
+              braucht: die halbe Fensterbreite Einrueckung parkt zwei Karten in
+              der linken Haelfte und laesst die rechte leer, die Tiefenkurve
+              dunkelt eine der beiden dauerhaft ab, und Pfeile wie
+              Fortschrittsstrich versprechen ein Blaettern, das nichts bewegt.
+   „stapel" — auf dem Telefon passen zwei Karten nie nebeneinander. Als Reihe
+              blieb genau ein Wisch-Schritt uebrig: eine Geste, die fast nichts
+              tut. Untereinander stehen alle Gesichter gleichzeitig da, und das
+              Scrollen macht die Seite selbst.
+   Aric, 21.09.2026: „bei Design oder Praevention/Ernaehrung kann man da nicht
+   scrollen" — beide Sonderfaelle kamen aus derselben Reihen-Logik. */
+.gal__rail[data-modus="gruppe"]{
+  padding-inline:var(--rand);
+  justify-content:center;
+  scroll-snap-type:none;
+  overflow-x:hidden;
+  cursor:default;
+}
+.gal__rail[data-modus="stapel"]{
+  flex-direction:column;
+  align-items:center;
+  padding:0 var(--rand) 1.4rem;
+  gap:clamp(1.6rem,6vw,2.4rem);
+  scroll-snap-type:none;
+  overflow-x:hidden;
+  cursor:default;
+}
+.gal__rail[data-modus="stapel"] .member{flex:0 0 auto;width:min(78vw,22rem)}
+.gal__rail[data-modus="gruppe"] .member,
+.gal__rail[data-modus="stapel"] .member{cursor:pointer}
+/* Im Rundlauf gibt es keinen Anfang und kein Ende mehr. Die halbe Fensterbreite
+   Einrueckung war genau dafuer da, die erste und die letzte Karte noch in die
+   Mitte zu bekommen — im Band gibt es weder die eine noch die andere, und die
+   Einrueckung hinterliesse nur eine leere Bildschirmhaelfte.
+   Der Fangpunkt bleibt an. Er faengt ab, was nach einem Zug mit der Maus oder
+   einem Wisch uebrig bleibt — ohne ihn steht die Reihe zwischen zwei Karten und
+   keine traegt mehr ihren Namen. Mit dem Versatz vertraegt er sich: das Band ist
+   um genau eine Satzbreite periodisch, der Fangpunkt nach dem Sprung also
+   derselbe wie davor. */
+.gal__rail[data-loop="1"]{padding-inline:0}
+/* Ausserhalb des Rundlaufs haben die Klone nichts zu suchen: bei einem Filter
+   auf zwei Personen stuenden sonst sechs Karten da. */
+.gal__rail:not([data-loop="1"]) .member[data-klon]{display:none}
+.gal[data-modus="gruppe"] .gal__bar,
+.gal[data-modus="gruppe"] .gal__arrow,
+.gal[data-modus="stapel"] .gal__bar,
+.gal[data-modus="stapel"] .gal__arrow{display:none}
+/* Der Hinweis bleibt stehen, verliert aber das Wischen: antippen geht weiter. */
+.gal[data-modus="gruppe"] .gal__hint,
+.gal[data-modus="stapel"] .gal__hint{justify-content:flex-start}
+
+.member{
+  flex:0 0 var(--karte);
+  scroll-snap-align:center;
+  display:block;margin:0;padding:0;border:0;background:none;
+  font:inherit;color:inherit;text-align:left;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+}
+/* Tiefe und Helligkeit setzt js/team.js hier — die Kurve haengt am Abstand zur
+   Mitte und laesst sich nicht in Klassen abbilden. */
+.member__d{display:block;transform-origin:50% 50%}
+.gal__rail.is-zieht .member{cursor:grabbing}
+.member__img{
+  display:block;aspect-ratio:3/4;overflow:hidden;background:var(--pine);
+  position:relative;
+}
+.member__img img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  transition:transform .5s var(--ease-out),filter .5s var(--ease-out);
+}
+.member:hover .member__img img,
+.member:focus-visible .member__img img{transform:scale(1.04)}
+/* Orange Kante beim Ueberfahren: dieselbe Geste wie bei den Blog-Karten. */
+.member__img::after{
+  content:"";position:absolute;inset:auto 0 0;height:3px;background:var(--orange);
+  transform:scaleX(0);transform-origin:left;transition:transform .45s var(--ease-out);
+}
+.member:hover .member__img::after,
+.member:focus-visible .member__img::after,
+.member.is-mitte .member__img::after{transform:scaleX(1)}
+.member:focus-visible{outline:2px solid var(--orange);outline-offset:4px}
+
+/* Nur die Mitte ist beschriftet. 33 gleich laute Namen nebeneinander sind eine
+   Liste; ein einziger Name unter dem scharfen Bild ist eine Person. */
+.member__cap{display:block;padding:.9rem 0 0;opacity:.14;transition:opacity .45s var(--ease-out)}
+.member.is-mitte .member__cap,
+.member:focus-visible .member__cap{opacity:1}
+/* Nur bei echter Maus: auf dem Touchscreen bleibt :hover nach dem Antippen
+   haengen, dann stuenden zwei Namen gleichzeitig da. */
+@media (hover:hover){.member:hover .member__cap{opacity:1}}
+@media (prefers-reduced-motion:reduce){.member__cap{opacity:1}}
+.member__name{display:block;font-size:1rem;font-weight:500;letter-spacing:.01em;color:var(--cream)}
+.member__role{display:block;margin-top:.3rem;font-size:.75rem;line-height:1.5;font-weight:300;color:rgba(251,241,224,.78)}
+
+.gal__bar{
+  margin:0 var(--rand);height:1px;background:rgba(251,241,224,.16);
+}
+.gal__bar-fill{
+  display:block;height:100%;background:var(--orange);
+  transform:scaleX(0);transform-origin:left;
+}
+.gal__hint{
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding:1rem var(--rand) 0;
+  font-size:.6875rem;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(251,241,224,.45);
+}
+/* Die beiden Pfeile am rechten Ende der Hinweiszeile stehen nebeneinander.
+   Ohne eigene Regel ist der Traeger ein inline-Span: die Knoepfe sassen auf
+   der Grundlinie und bekamen den Zeilenabstand als Luecke. */
+.gal__nav{display:flex;align-items:center;gap:.6rem}
+
+/* Hier steht nur das Aussehen, nicht die Lage. Die Lage stand frueher mit drin:
+   `.gal__arrow` trug `position:absolute`, weil der Pfeil in der Team-Reihe auf
+   den Portraits liegt. Dieselbe Klasse sitzt aber auch in der Hinweiszeile der
+   Standortseiten und in der Profilkarte, und dort gibt es kein `--l`/`--r`.
+   Ohne left/right legten sich beide Pfeile uebereinander, der hintere war nicht
+   anklickbar, und sie schoben das Dokument bei 390px Breite um 25px nach
+   rechts: die Seite liess sich am Telefon seitlich wegschieben. */
+.gal__arrow{
+  width:3.25rem;height:3.25rem;flex:0 0 auto;
+  display:grid;place-items:center;
+  border:1px solid rgba(251,241,224,.3);border-radius:50%;
+  /* Deckende Flaeche, nicht nur ein Rand: der Pfeil steht ueber Portraits, und
+     ein blosser Umriss verschwand auf hellen Bildstellen. */
+  background:rgba(13,26,21,.72);backdrop-filter:blur(6px);
+  color:var(--cream);font-size:1.1rem;line-height:1;cursor:pointer;
+  transition:background .3s var(--ease-out),border-color .3s var(--ease-out),
+             color .3s var(--ease-out),transform .3s var(--ease-out);
+}
+.gal__arrow:hover{background:var(--orange);border-color:var(--orange);color:var(--pine-black)}
+.gal__arrow:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+.gal__arrow:active{transform:scale(.94)}
+
+/* Auf der Reihe liegend, auf Hoehe der Gesichter, und dauerhaft sichtbar, nicht
+   erst beim Ueberfahren. Ein Hinweis, den nur eine Maus hervorholt, erreicht
+   niemanden mit Touchscreen oder Tastatur. Ausgegraut werden sie nicht mehr: im
+   Rundlauf gibt es kein Ende, an dem ein Pfeil nichts mehr zu tun haette.
+   z-index ueber 40: js/team.js stapelt die Karten per Inline-Stil bis 40, um die
+   Tiefenkurve zu ordnen. Auf 20 lag der Pfeil hinter den Portraits und war genau
+   dort nicht anklickbar, wo er sichtbar war. */
+.gal__arrow--l,.gal__arrow--r{
+  position:absolute;top:38%;transform:translateY(-50%);z-index:60;
+}
+.gal__arrow--l{left:clamp(.5rem,2vw,1.6rem)}
+.gal__arrow--r{right:clamp(.5rem,2vw,1.6rem)}
+.gal__arrow--l:hover{transform:translateY(-50%) translateX(-3px)}
+.gal__arrow--r:hover{transform:translateY(-50%) translateX(3px)}
+.gal__arrow--l:active,.gal__arrow--r:active{transform:translateY(-50%) scale(.94)}
+@media (prefers-reduced-motion:reduce){
+  .gal__arrow,.gal__arrow:hover,.gal__arrow:active{transform:none}
+  .gal__arrow--l,.gal__arrow--r,
+  .gal__arrow--l:hover,.gal__arrow--r:hover,
+  .gal__arrow--l:active,.gal__arrow--r:active{transform:translateY(-50%)}
+}
+
+/* ---------- Team: Profilkarte ---------- */
+
+/* Die Karte hat keine gesetzte Hoehe: sie ist so hoch wie die hoehere ihrer
+   beiden Spalten. Bei den meisten Personen ist heute nur wenig hinterlegt —
+   eine kleine, ruhige Karte ist dann richtiger als eine grosse mit einem Loch. */
+.pc{
+  width:min(56rem,92vw);max-width:none;max-height:88vh;
+  padding:0;border:0;background:var(--pine);color:var(--cream);
+  box-shadow:0 40px 120px rgba(0,0,0,.6);
+}
+.pc::backdrop{background:rgba(11,22,17,.86);backdrop-filter:blur(6px)}
+.pc[open]{animation:pc-auf .4s var(--ease-out) both}
+@keyframes pc-auf{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.pc__x{
+  position:absolute;top:.75rem;right:.75rem;z-index:2;
+  width:2.5rem;height:2.5rem;display:grid;place-items:center;
+  border:0;background:rgba(11,22,17,.55);color:var(--cream);
+  font-size:1.5rem;line-height:1;cursor:pointer;
+  transition:background .3s var(--ease-out)}
+.pc__x:hover{background:var(--orange);color:var(--pine-black)}
+
+.pc__body{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1fr)}
+.pc__shot{background:var(--pine-black);aspect-ratio:3/4}
+.pc__shot img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* Mittig statt oben und unten auseinandergezogen: was fehlt, hinterlaesst dann
+   Luft auf beiden Seiten statt eines Lochs ueber der Navigation. */
+.pc__txt{
+  padding:clamp(1.6rem,3.4vw,2.6rem);
+  display:flex;flex-direction:column;justify-content:center;
+  overflow-y:auto;
+}
+.pc__kicker{
+  margin:0 0 1.1rem;
+  font-size:.6875rem;font-weight:500;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--orange);
+}
+/* Namensschild in der Signatur der Seite: Cream-Block, Schrift ausgestanzt. */
+.pc__name{
+  margin:0;align-self:flex-start;
+  background:var(--cream);color:var(--pine-black);
+  padding:.08em .16em .12em;
+  font-weight:900;text-transform:uppercase;letter-spacing:-.022em;
+  font-size:clamp(1.5rem,2.9vw,2.4rem);line-height:1.06;
+}
+
+.pc__facts{
+  margin:clamp(1.6rem,3vw,2.4rem) 0 0;
+  display:grid;grid-template-columns:auto 1fr;gap:.55rem 1.4rem;
+  border-top:1px solid rgba(251,241,224,.16);padding-top:1.4rem;
+  font-size:.8125rem;
+}
+.pc__facts dt{
+  font-size:.625rem;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(251,241,224,.45);padding-top:.15em;
+}
+.pc__facts dd{margin:0;line-height:1.6}
+/* Fehlender Inhalt wird als Luecke gezeigt, nicht kaschiert. */
+.is-leer{color:rgba(251,241,224,.3);font-style:italic}
+
+.pc__satz{margin:1.4rem 0 0;font-size:.9375rem;line-height:1.7;color:rgba(251,241,224,.8)}
+
+.pc__nav{
+  padding-top:clamp(1.6rem,3vw,2.4rem);
+  display:flex;align-items:center;gap:1rem;
+}
+.pc__zaehler{
+  font-size:.6875rem;letter-spacing:.16em;color:rgba(251,241,224,.45);
+}
+
+@media (max-width:820px){
+  /* Am unteren Rand angesetzt und nur so hoch wie noetig: eine formatfuellende
+     Karte mit drei Zeilen Inhalt sah aus, als fehle der Rest der Seite. */
+  .pc{width:100vw;max-height:92dvh;margin:auto 0 0}
+  .pc__body{grid-template-columns:1fr}
+  .pc__shot{aspect-ratio:4/3}
+  .pc__shot img{object-position:50% 22%}
+  .pc__txt{justify-content:flex-start}
+}
+
+.team-note{
+  padding:0 var(--rand) clamp(4rem,9vh,6rem);
+  max-width:calc(60ch + 2 * var(--rand));
+  font-size:.8125rem;line-height:1.7;color:rgba(251,241,224,.45);
+}
+
+/* ---------- Abschluss ---------- */
+
+.tail{
+  padding:clamp(4rem,10vh,7rem) var(--rand);
+  border-top:1px solid rgba(251,241,224,.16);
+  text-align:center;
+}
+.tail .hl{align-items:center;margin-bottom:0}
+.tail .cta{align-items:center}
+
+/* Der grosse Abschluss-Knopf steht in style.css mit padding:.18em. Das ist auf
+   dem Desktop reichlich (Schrift 36px), auf dem Telefon aber faellt die
+   Schriftgroesse in den Anschlag bei 1,25rem und die Klickflaeche mit ihr:
+   gemessen 31px, also unter den 36, ab denen eine Flaeche zuverlassig zu treffen
+   ist. style.css liegt als Kopie in vier Marken und wird nicht angefasst, die
+   Untergrenze kommt darum von hier.
+   max() statt eines festen Werts, weil ein fester Wert den Desktop mitzieht:
+   bei 36px Schrift gewinnt dort weiter die em-Angabe. */
+.cta a{padding-top:max(.18em,10px);padding-bottom:max(.18em,10px)}
+
+/* ---------- Standort-Kacheln: eigene Flaeche statt blankes Foto ---------- */
+/* Anlass (2026-10-07, Aric): "das erkennt man nicht immer so hundertprozentig,
+   dass man auf die Praxen klicken kann".
+
+   Nachgemessen, mit Abdunkler, also so wie es wirklich aussieht. Anteil der
+   Textflaeche, der unter Kontrast 4,5 liegt:
+
+                       390 px   1440 px
+     Hausname           28,8 %   22,7 %
+     PLZ                39,1 %    0,0 %
+     "Praxis ansehen"   63,7 %   31,3 %
+
+   Ausgerechnet das Element, das "hier kann man klicken" sagen soll, ist das am
+   schlechtesten lesbare. Die Ursache ist nicht die Farbe, sondern der fehlende
+   Grund: die Kacheln stehen direkt auf einem Foto, und ob ihre Schrift lesbar
+   ist, entscheidet, was zufaellig dahinter liegt. Eine Fensterfront im Bild
+   genuegt, und der Hinweis verschwindet.
+
+   Am 21.08. war bewusst gegen einen Rahmen entschieden worden ("haette das
+   Kapitel in Kaesten zerlegt"), die Kante oben allein sollte reichen. Gemessen
+   reicht sie nicht. Statt eines harten Rahmens bekommt die Kachel deshalb eine
+   abgedunkelte Flaeche in derselben Sprache wie .beat__scrim: ein Grund, kein
+   Kasten. Das Foto bleibt ringsum sichtbar.
+
+   backdrop-filter ohne Praefix UND mit -webkit-: Safari kennt es bis heute nur
+   praefigiert. Faellt es ganz aus, traegt die Grundfarbe allein, deshalb ist
+   sie mit 0,66 schon fuer sich dunkel genug. */
+.ort{
+  background:rgba(8,18,14,.66);
+  -webkit-backdrop-filter:blur(7px) saturate(.85);
+          backdrop-filter:blur(7px) saturate(.85);
+  border:1px solid rgba(251,241,224,.16);
+  border-top-color:rgba(251,241,224,.3);
+  padding:1.15rem 1.25rem 1.3rem;
+  transition:background-color .32s var(--ease-out), border-color .32s var(--ease-out);
+}
+@media (hover:hover) and (pointer:fine){
+  .ort:hover{background:rgba(8,18,14,.82);border-color:rgba(230,126,34,.55)}
+}
+
+/* Aus der 11px-Zeile wird ein Knopf. Sie bleibt klein, bekommt aber eine Kante
+   und damit eine Form, die man auch erkennt, ohne sie zu lesen. Auf dem Telefon
+   gibt es kein Ueberfahren: was im Ruhezustand nicht nach Knopf aussieht, sieht
+   dort nie nach Knopf aus. */
+.ort__go{
+  margin-top:1.15rem;padding:.7rem 1rem;        /* ergibt rund 40px */
+  border:1px solid rgba(251,241,224,.42);
+  color:var(--cream);font-weight:900;letter-spacing:.14em;
+  transition:background-color .22s var(--ease-out), border-color .22s var(--ease-out),
+             color .22s var(--ease-out);
+}
+@media (hover:hover) and (pointer:fine){
+  .ort:hover .ort__go{background:var(--orange);border-color:var(--orange);color:var(--pine-black)}
+}
+/* Der orangene Strich lief bisher auf der Trennlinie und war der einzige
+   Hinweis. Jetzt sitzt er auf der Kachelkante und ergaenzt sie nur noch. */
+.ort::before{left:-1px;right:-1px;height:2px;top:-1px}
+
+/* Das Siegel ist Dekoration (aria-hidden), liegt aber als position:fixed mit
+   z-index:50 dauerhaft in der unteren linken Ecke und faengt dort jeden Klick
+   ab. Bei 390 px lag es genau auf "Praxis ansehen" der zweiten Praxis - also
+   ausgerechnet auf dem Knopf, dessen Erkennbarkeit hier repariert wurde.
+   Gefunden ueber elementsFromPoint, nicht im Bild: das Siegel ist halb
+   durchsichtig und sieht nicht aus wie etwas, das im Weg steht.
+   Die Regel steht hier und nicht in style.css, weil style.css als Kopie in
+   vier Marken liegt. DERSELBE DEFEKT STECKT IN DEN ANDEREN DREI. */
+.seal{pointer-events:none}
+
+/* Der Klick ist damit frei, die Schrift aber noch nicht: gemessen deckt die
+   Siegelgrafik bei 390 px 35 % der Flaeche von "Praxis ansehen" ab und drueckt
+   den Kontrast dort von 16 auf 3,6. Auf dem Telefon steht das Siegel ausserdem
+   direkt neben dem Buchungsknopf von DocMedico, der dieselbe Ecke belegt.
+   Es traegt keine Information, die nicht woanders steht - die Umschrift ist
+   aria-hidden, also fuer Vorleseprogramme ohnehin nicht vorhanden. Ab 821 px
+   ueberlappt nichts, dort bleibt es. */
+@media (max-width:820px){
+  .seal{display:none}
+}
+
+/* Die Fusszeile steht weiter frei auf dem Foto und wird dort genauso
+   unzuverlaessig gelesen. Sie traegt keine Entscheidung, aber die
+   Telefonnummer darin schon. */
+.ort__fuss a{
+  display:inline-block;padding:.45rem 0;
+  text-decoration:underline;text-decoration-color:rgba(251,241,224,.4);
+  text-underline-offset:.26em;border-bottom:0;
+}
+
+/* Impressum und Datenschutz tragen keine Seitenspalte und kein
+   Inhaltsverzeichnis. .artbody waere hier falsch: das Raster erwartet genau
+   zwei Kinder und haette eine leere zweite Spalte stehen lassen.
+   Der Rahmen ist trotzdem derselbe wie dort - --breit, mittig, --gut Rand.
+   Ein erster Versuch zentrierte stattdessen die Lesespalte selbst. Gemessen
+   ergab das eine zweite linke Kante: Text bei 332 px, Logo und Ueberschrift
+   bei 130. Auf dieser Seite laufen alle drei auf einer Linie. */
+.recht{
+  max-width:var(--breit);
+  margin-inline:auto;
+  padding:0 var(--gut);
+}
+.recht > .prose{padding-left:0;padding-right:0;max-width:var(--lese)}
+.recht .prose h2{font-size:clamp(1rem,1.4vw,1.2rem)}
+.recht .prose address{font-style:normal;margin:0 0 1.35em;line-height:1.7}
+
+.page-foot{
+  padding:0 var(--rand) 3.5rem;text-align:center;
+  font-size:.75rem;letter-spacing:.06em;line-height:2;color:rgba(251,241,224,.45);
+}
+.page-foot a{text-decoration:none;border-bottom:1px solid rgba(251,241,224,.25)}
+
+/* Das Buchungsfenster von DocMedico steht fest am unteren Rand und deckt auf
+   dem Telefon die untersten rund 80 px ab. Mitten im Text ist das egal, man
+   scrollt weiter. Am Seitenende nicht: dort liegt, was liegt. Nachgemessen auf
+   allen 43 Seiten war genau ein Paar Links betroffen - Impressum und
+   Datenschutz, auf 42 Seiten. Die muessen nach § 5 DDG staendig verfuegbar
+   sein, ein Link unter einem festen Fenster ist das nicht.
+   128 px statt 56: der Rand muss groesser sein als das Fenster hoch ist. */
+@media (max-width:820px){
+  .page-foot{padding-bottom:8rem}
+}
+
+/* ---------- Klein ---------- */
+
+@media (max-width:820px){
+  /* Seit dem fuenften Eintrag passt die Nav nicht mehr in eine Telefonzeile:
+     gemessen 368px bei 360px Fenster, das Dokument lief dadurch 57px nach
+     rechts aus (bei 390px: 29px). Darum stapelt der Kopf und die Nav darf
+     umbrechen, statt einen Eintrag mobil zu verstecken —
+     "Sportphysiotherapie" ist als interner Ankertext zu wertvoll dafuer. */
+  .page-top{padding:1.1rem var(--rand);flex-wrap:wrap;row-gap:.9rem}
+  .page-top .wordmark img{height:20px}
+  .page-nav{gap:.55rem 1rem;flex-wrap:wrap;width:100%}
+  .page-nav a{font-size:.625rem;letter-spacing:.12em}
+  .artcover{min-height:60svh}
+  .tldr{padding:1.4rem 1.4rem 1.6rem}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .lead__bg,.qc__img img{transition:none}
+  .lead:hover .lead__bg,.qc:hover .qc__img img{transform:none}
+  .member__img img{transition:none}
+  .member:hover .member__img img{transform:none}
+  .pc[open]{animation:none}
+  .gal__rail{scroll-behavior:auto}
+}
+
+/* ---------- Standortseite ---------- */
+
+/* Der Hero traegt das Bild als echtes <img>, nicht als Hintergrund: ein Raum
+   ist hier der Inhalt der Seite und gehoert deshalb in den Alt-Text. */
+.ohero{
+  position:relative;isolation:isolate;
+  min-height:min(78vh,44rem);display:flex;align-items:flex-end;
+  padding:calc(var(--gut) + 3rem) var(--rand) clamp(2.5rem,6vh,4.5rem);
+}
+.ohero__bg{
+  position:absolute;inset:0;z-index:-2;
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+/* Faktor 0,85 wie bei .beat__scrim — siehe Begruendung dort. Der unterste Stopp
+   war voll deckend (var(--pine-black)) und ist jetzt ebenfalls durchlaessig. */
+.ohero__scrim{
+  position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(to top,rgba(11,22,17,.850) 4%,rgba(11,22,17,.697) 38%,rgba(11,22,17,.238) 100%);
+}
+.ohero__inner{max-width:44rem}
+.ohero .hl{margin:.6rem 0 0}
+.ohero .lede{margin-top:1.4rem;max-width:34rem}
+
+.ofakten{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:clamp(1.6rem,4vw,3.5rem);
+  padding:clamp(2.5rem,6vh,4rem) var(--rand) clamp(2rem,5vh,3rem);
+}
+.ofakt{border-top:1px solid rgba(251,241,224,.22);padding-top:1rem}
+.ofakt__h{
+  margin:0 0 .8rem;font-size:.6875rem;font-weight:500;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--orange);
+}
+.ofakt__t{margin:.25rem 0 0;font-size:.9375rem;font-weight:300;line-height:1.6;color:rgba(251,241,224,.9)}
+.ofakt__t--leise{color:rgba(251,241,224,.6);font-size:.8125rem}
+/* Die Telefonnummer steht hier allein unter ihrer Beschriftung, ist also ein
+   Knopf und kein Wort im Satz. Gemessen 19px hoch. Polsterung senkrecht bringt
+   sie auf rund 40px; der Strich wandert dabei von border-bottom auf
+   text-decoration, sonst rutscht er mit der Kastenunterkante vom Wort weg. */
+.ofakt__t a{
+  display:inline-block;padding:.52rem 0;
+  color:inherit;
+  text-decoration:underline;
+  text-decoration-color:rgba(251,241,224,.32);
+  text-decoration-thickness:1px;
+  text-underline-offset:.26em;
+  transition:text-decoration-color .22s var(--ease-out), color .22s var(--ease-out);
+}
+.ofakt__t a:hover{text-decoration-color:var(--orange);color:var(--orange)}
+.ofakt__t a:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+.ofakt .ort__z{margin:0}
+
+.os{padding-top:clamp(1rem,3vh,2rem)}
+.os__h{
+  margin:0 0 1.4rem;padding:0 var(--rand);
+  font-size:.6875rem;font-weight:500;letter-spacing:.18em;
+  text-transform:uppercase;color:rgba(251,241,224,.5);
+}
+/* Anders als die Team-Reihe faengt die Bildstrecke links am Satzspiegel an und
+   laeuft rechts aus dem Bild: die Bilder sind quer und breit, zentriert stuende
+   links eine halbe Spalte leer. */
+.os__rail{
+  --bild:clamp(19rem,42vw,34rem);
+  display:flex;gap:clamp(.8rem,1.6vw,1.4rem);
+  padding:0 var(--rand) 1.4rem;
+  overflow-x:auto;overscroll-behavior-x:contain;
+  /* Ohne scroll-padding rechnet der Fangpunkt die Polsterung nicht mit: der
+     Browser schob die Reihe beim Laden um genau die Polsterung nach links, das
+     erste Bild klebte am Fensterrand statt am Satzspiegel. Beide Werte muessen
+     deshalb gleich bleiben. */
+  scroll-snap-type:x mandatory;scroll-padding-left:var(--rand);
+  scrollbar-width:none;cursor:grab;
+}
+.os__rail::-webkit-scrollbar{display:none}
+.os__rail.is-zieht{cursor:grabbing;scroll-snap-type:none}
+.os__rail:focus-visible{outline:2px solid var(--orange);outline-offset:-2px}
+
+.os__bild{
+  flex:0 0 var(--bild);scroll-snap-align:start;
+  display:block;margin:0;padding:0;border:0;background:none;
+  font:inherit;color:inherit;text-align:left;cursor:pointer;position:relative;
+  -webkit-tap-highlight-color:transparent;
+}
+.os__rail.is-zieht .os__bild{cursor:grabbing}
+.os__bild img{
+  display:block;width:100%;aspect-ratio:3/2;object-fit:cover;
+  background:var(--pine);
+  transition:filter .5s var(--ease-out);
+  filter:brightness(.82) saturate(.9);
+}
+.os__bild:hover img,.os__bild:focus-visible img{filter:none}
+.os__bild:focus-visible{outline:2px solid var(--orange);outline-offset:4px}
+.os__cap{
+  display:block;padding:.8rem 0 0;
+  font-size:.75rem;font-weight:300;letter-spacing:.04em;
+  color:rgba(251,241,224,.72);
+}
+
+.oslb{
+  width:min(96vw,84rem);max-width:none;max-height:92vh;
+  padding:0;border:0;background:var(--pine-black);
+  box-shadow:0 40px 120px rgba(0,0,0,.7);
+}
+.oslb::backdrop{background:rgba(11,22,17,.9);backdrop-filter:blur(6px)}
+.oslb[open]{animation:pc-auf .35s var(--ease-out) both}
+.oslb img{display:block;width:100%;height:auto;max-height:92vh;object-fit:contain}
+
+.owechsel{padding:clamp(2.5rem,6vh,4rem) var(--rand) 0}
+.owechsel__k{
+  margin:0 0 1rem;font-size:.6875rem;font-weight:500;letter-spacing:.18em;
+  text-transform:uppercase;color:rgba(251,241,224,.5);
+}
+.owechsel__l{
+  display:grid;grid-template-columns:minmax(0,14rem) minmax(0,1fr);
+  gap:clamp(1.2rem,3vw,2.4rem);align-items:center;
+  text-decoration:none;color:inherit;
+  border-top:1px solid rgba(251,241,224,.22);padding-top:1.2rem;position:relative;
+}
+.owechsel__l::before{
+  content:"";position:absolute;top:-1px;left:0;right:0;height:1px;
+  background:var(--orange);transform:scaleX(0);transform-origin:left;
+  transition:transform .5s var(--ease-out);
+}
+.owechsel__l:hover::before,.owechsel__l:focus-visible::before{transform:scaleX(1)}
+.owechsel__l:focus-visible{outline:2px solid var(--orange);outline-offset:6px}
+.owechsel__l img{
+  display:block;width:100%;aspect-ratio:2/1;object-fit:cover;
+  filter:brightness(.8) saturate(.85);transition:filter .5s var(--ease-out);
+}
+.owechsel__l:hover img{filter:none}
+.owechsel__l b{
+  display:block;font-size:clamp(1.1rem,2.4vw,1.6rem);font-weight:900;
+  letter-spacing:.01em;text-transform:uppercase;color:var(--cream);
+}
+.owechsel__l i{
+  display:block;margin-top:.5rem;font-style:normal;
+  font-size:.875rem;font-weight:300;line-height:1.6;color:rgba(251,241,224,.72);
+}
+.owechsel__t{margin:1.6rem 0 0;font-size:.8125rem;letter-spacing:.04em}
+.owechsel__t a{color:var(--orange);text-decoration:none;border-bottom:1px solid rgba(217,145,41,.4)}
+.owechsel__t a:hover{border-color:var(--orange)}
+.owechsel__t a:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+
+@media (max-width:820px){
+  .ofakten{grid-template-columns:1fr;gap:1.6rem}
+  .owechsel__l{grid-template-columns:1fr;gap:1rem;align-items:start}
+
+  /* Gleiche Begruendung wie bei .beat__scrim in style.css: auf dem Telefon
+     spannt der Text ueber die volle Breite und geraet in den absichtlich
+     offenen Teil des Seitenverlaufs. Der Blog-Aufmacher stand dort gemessen
+     auf 4,06:1. Hier faellt der Verlauf nach unten hin auf, weil Kicker und
+     Kopfzeile am unteren Rand sitzen. */
+  .lead__scrim{
+    background:linear-gradient(to bottom,
+      rgba(11,22,17,.78) 0%, rgba(11,22,17,.72) 46%, rgba(11,22,17,.68) 100%);
+  }
+  .ohero__scrim,.artcover__scrim{
+    background:linear-gradient(to top,
+      rgba(11,22,17,.88) 6%, rgba(11,22,17,.72) 52%, rgba(11,22,17,.54) 100%);
+  }
+}
+
+/* ======================================================================
+   Kino-Layout: die Kopfleiste war nie freigehalten
+   ======================================================================
+
+   Anlass (Aric, 08.10.2026): „Wenn ich bei Standorte bin und bei Mehr,
+   schneidet sich das immer so, dass das Logo ueber dem Mehr liegt."
+
+   Nachgemessen, nicht nachempfunden. Im Fliess-Layout steht seit jeher
+   `.beat{padding:7.5rem 0 6rem}` — dort ist der Platz fuer die feste
+   Kopfleiste reserviert. Im Kino-Layout fehlt genau diese Reservierung:
+   `.beat` zentriert `.beat__inner` ueber die VOLLE Fensterhoehe, als saesse
+   oben nichts. Solange ein Kapitel kurz ist, faellt das nicht auf — der Inhalt
+   bleibt von allein unterhalb des Schriftzugs.
+
+   Die beiden laengsten Kapitel sind aber „Standorte" (702 px) und „Mehr"
+   (722 px), und zentrierter Inhalt steigt mit jedem Pixel, den das Fenster
+   niedriger wird, um einen halben Pixel nach oben. Gemessen bei 1440x735 —
+   ein ganz normales Safari-Fenster auf einem 1440x900-Bildschirm, Menueleiste
+   und Werkzeugleiste abgezogen:
+
+     Standorte   «05 · Standorte» bei y=17,  «Zwei Haeuser.» bei y=61
+     Mehr        «06 · Mehr»      bei y=7,   «Das Haus hat»  bei y=50
+
+   Der Schriftzug belegt 53..80. Das Logo liegt also buchstaeblich auf der
+   Schlagzeile. Bei 1280x660 steht der Kicker sogar bei y=-6, ist also gar
+   nicht mehr im Bild. Auf 1440x900 und hoeher passiert nichts — deshalb war
+   es beim Bauen unsichtbar.
+
+   Drei Teile, und jeder einzelne waere fuer sich zu wenig:
+
+   1. Der Kopf wird reserviert (`padding-top`). Das Medium bleibt full-bleed:
+      `.beat__media` ist absolut mit `inset:0` gesetzt und bezieht sich damit
+      auf die Polsterbox — das Bild deckt den reservierten Streifen mit ab,
+      nur die Typo rueckt nach unten.
+
+   2. `align-items:safe center`. Zentrierter Inhalt, der nicht mehr passt,
+      laeuft sonst nach BEIDEN Seiten ueber — also auch nach oben, wieder
+      unter den Schriftzug. `safe` faellt bei Ueberlauf auf `start` zurueck:
+      lieber unten abgeschnitten als oben unlesbar. (Wo `safe` fehlt, bleibt
+      es beim normalen `center` aus style.css — dann greift Teil 3 allein.)
+
+   3. Bei niedrigen Fenstern wird der Satz enger und die Schlagzeile kleiner.
+      Ohne das waeren 1. und 2. nur eine Verschiebung des Problems ans untere
+      Ende, wo der feste DocMedico-Knopf wartet. Eine Buehne, die die volle
+      Fensterhoehe beansprucht, muss auf die Hoehe genauso reagieren wie auf
+      die Breite — bisher stand im ganzen Stylesheet keine einzige
+      Hoehen-Abfrage.
+
+   Alles greift erst ab 821 px Breite, also nur im Kino-Modus. Das
+   Fliess-Layout auf dem Telefon bleibt unberuehrt. */
+
+@media (min-width:821px){
+  .cinema .beat{
+    /* 8.3rem = 133 px, die gemessene Hoehe von .chrome-top (53 px Polster,
+       27 px Schriftzug, 53 px Polster). */
+    padding-top:8.3rem;
+    align-items:safe center;
+  }
+}
+
+/* --- Fenster unter 880 px: erste Stufe ------------------------------- */
+@media (min-width:821px) and (max-height:880px){
+  /* Die 14vh Fusspolster im Kino-Layout setzen die Schlagzeile auf den
+     Referenz-Anker (246/900). Bei 900 px Fensterhoehe ist das richtig; bei
+     700 px sind es 98 px, die dem Inhalt oben fehlen. */
+  .cinema .beat__inner{padding-bottom:10vh}
+  :root{--hl-size:clamp(2.25rem,4.69vw,4.1rem)}
+  .kicker{margin-bottom:1rem}
+  .lede{margin-top:1.2rem}
+  .orte{margin-top:1.5rem}
+  .tueren{margin-top:1.4rem}
+}
+
+/* --- Fenster unter 790 px: zweite Stufe ------------------------------ */
+@media (min-width:821px) and (max-height:790px){
+  .cinema .beat__inner{padding-bottom:7vh}
+  :root{--hl-size:clamp(2rem,4.2vw,3.5rem)}
+  .kicker{margin-bottom:.8rem}
+  .lede{margin-top:1rem}
+  .orte{margin-top:1.1rem}
+  .ort__z{margin-top:.6rem}
+  .ort__z > div{padding:.12rem 0}
+  .bewertung{margin-top:.7rem}
+  .ort__go{margin-top:.8rem}
+  .ort__fuss{margin-top:.6rem}
+  .tueren{margin-top:1.1rem}
+  .tueren__l{margin-top:.4rem}
+  .tuer{padding:.5rem 0 .55rem}
+}
+
+/* --- Fenster unter 700 px: dritte Stufe ------------------------------
+   Hier wird es eng genug, dass auch die Kopfleiste selbst Platz hergeben
+   muss. Sie rueckt zusammen, der Schriftzug bleibt gleich gross — er ist der
+   Weg zurueck auf die Hauptseite und darf nicht zur Fussnote werden. */
+@media (min-width:821px) and (max-height:700px){
+  .chrome-top{padding:1.9rem var(--gut)}
+  .cinema .beat{padding-top:5.6rem}
+  .cinema .beat__inner{padding-bottom:4vh}
+  :root{--hl-size:clamp(1.8rem,3.6vw,3rem)}
+  .lede{margin-top:.85rem}
+  .orte{gap:2.2rem;margin-top:.9rem}
+  .ort{padding-top:.7rem}
+  .ort__a{margin-top:.1rem}
+  .ort__z{margin-top:.45rem}
+  .bewertung{margin-top:.5rem}
+  .ort__go{margin-top:.6rem}
+  .tueren{margin-top:.9rem;gap:1.4rem 3rem}
+  .tuer{padding:.38rem 0 .42rem}
+}
+
+/* --- Das Siegel tritt bei niedrigen Fenstern zurueck -----------------
+   Beim Nachmessen des Kopf-Problems mitgefunden, und es ist derselbe Fehler
+   am anderen Ende: `.seal` steht fest auf `left:var(--gut)` — also GENAU auf
+   der linken Textkante — und `bottom:2.6rem`. Wo der Inhalt bis an den
+   unteren Rand reicht, liegt die Siegelgrafik zwangslaeufig darauf. Gemessen
+   bei 1440x735: 2.440 px² ueber «Parken direkt vor der Tuer · 0251 74788200»
+   im Kapitel Standorte und 1.610 px² ueber «29 Artikel zu Beschwerden ...»
+   im Kapitel Mehr. Der Ring laeuft mitten durch die Telefonnummer.
+
+   Ausweichen nach links geht nicht: das Siegel ist 86 px breit, die Gasse bei
+   1280 px Fensterbreite nur 85 px. Kleiner machen geht auch nicht — die
+   Umschrift steht in viewBox-Einheiten und schrumpft mit; schon bei 64 px
+   waere sie 5 CSS-Pixel hoch (dieselbe Rechnung wie im Telefon-Block von
+   style.css).
+
+   Also dieselbe Entscheidung wie dort: das Siegel ist das einzige rein
+   dekorative feste Element der Seite, und es stand jetzt zum dritten Mal auf
+   etwas, das gebraucht wird — am 07.10. auf der Klickflaeche „Praxis
+   ansehen", heute auf einer Telefonnummer. Wo es eng wird, geht die
+   Dekoration. Ab 880 px Fensterhoehe ist es wieder da. */
+@media (min-width:821px) and (max-height:880px){
+  .seal{display:none}
+}
+
+/* --- Tueren halten Abstand zum Fortschrittsring ----------------------
+   Ebenfalls beim Gitterlauf gefunden, und unabhaengig von der Hoehe: der Ring
+   steht fest rechts auf halber Hoehe, die Tueren-Tafel ist 56rem breit. Unter
+   rund 1100 px Fensterbreite treffen sich beide — gemessen bei 1024 px lag
+   «Betriebliches Gesundheitsmanagement ...» mit 1.425 px² unter dem Ring.
+   Nicht den Ring verstecken: er ist die einzige Ortsangabe im Kino-Modus.
+   Stattdessen endet die Tafel vor ihm. */
+@media (min-width:821px){
+  .tueren{max-width:min(56rem, calc(100vw - 2 * var(--gut) - 7rem))}
+}
