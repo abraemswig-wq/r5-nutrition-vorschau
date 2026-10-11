@@ -180,6 +180,63 @@
 }
 .sources__hinweis b{font-weight:600;color:rgba(251,241,224,.82)}
 
+/* Die Bildherkunft, eine Stufe leiser als der Quellen-Vorbehalt darueber: sie
+   ist eine Angabe ueber die Seite, nicht ueber die Medizin. */
+.sources__bild{
+  margin:.9rem 0 0;max-width:var(--lese);
+  font-size:.6875rem;line-height:1.6;color:rgba(251,241,224,.5);
+}
+
+/* ---------- Lokale Verankerung am Artikelende ---------- */
+/* Zwischen Quellenliste und „Auch interessant". Der Grund, warum der Block
+   ueberhaupt existiert, steht mit Messwerten in tools/build_wissen.py bei
+   LOKAL — kurz: „Ernaehrungsberatung" und „Muenster" standen auf allen 21
+   Artikeln nie im selben Satz, und keiner der 63 Links im Fliesstext zeigte
+   auf die Seite, die ranken soll.
+
+   Dieselbe Spaltenbreite wie `.sources` und nicht wie `.weiter`: der Block
+   gehoert zum Lesefluss des Artikels, nicht zur Kachelleiste darunter. Stand
+   er auf --breit, saesse eine Textzeile ueber die ganze Fensterbreite und
+   waere unlesbar.
+
+   Absichtlich leise gesetzt — kleine Versalien-Ueberschrift wie `.weiter__h`,
+   Text auf Quellen-Helligkeit. Ein Block, der am Artikelende laut nach einem
+   Termin ruft, steht hier schon dreimal (`.jetzt`, `.artcard`, `.tail`); ein
+   vierter Ruf wuerde den Artikel zur Anzeige machen. Dieser hier sagt, wo wir
+   sind, und verlinkt weiter. */
+.lokal{
+  padding:0 var(--rand);
+  max-width:calc(var(--lese) + 2 * var(--rand));
+}
+.lokal__h{
+  margin:0 0 1rem;padding-top:1.4rem;
+  border-top:1px solid rgba(251,241,224,.18);
+  font-size:.75rem;font-weight:900;text-transform:uppercase;letter-spacing:.16em;
+  color:rgba(251,241,224,.5);
+  /* Die Laufweite haengt rechts ein Leerzeichen an — gleicher Ausgleich wie
+     bei .platte__l und .kicker. */
+  text-indent:.16em;
+}
+.lokal__t{
+  margin:0 0 .8rem;max-width:var(--lese);
+  font-size:.875rem;line-height:1.7;color:rgba(251,241,224,.72);
+}
+.lokal__t a{
+  color:var(--cream);text-decoration:none;
+  border-bottom:1px solid rgba(217,145,41,.45);
+}
+.lokal__t a:hover{border-bottom-color:var(--orange-lt)}
+.lokal__l{
+  margin:1.1rem 0 0;padding:0;list-style:none;
+  display:flex;flex-wrap:wrap;gap:.45rem .9rem;
+  font-size:.8125rem;
+}
+.lokal__l a{
+  color:var(--orange-lt);text-decoration:none;
+  border-bottom:1px solid rgba(217,145,41,.4);
+}
+.lokal__l a:hover{border-bottom-color:var(--orange-lt)}
+
 /* ---------- Sprungziele unter der klebenden Kopfleiste ---------- */
 /* Fuenf Regeln rechneten dieselbe Rechnung mit derselben festen Zahl (6rem in
    .prose h2[id], .prose h3[id], .sources li, .pos__i[id], 6.5rem in .rail__t).
@@ -207,7 +264,20 @@
 .sources li,
 /* #maya-pilgram — das Ziel der Autorenzeile unter den Wissens-Artikeln. Wer von
    dort kommt, soll den Steckbrief sehen und nicht die Kopfleiste. */
-.pos__i[id]{scroll-margin-top:var(--ankerluft,6rem)}
+.pos__i[id],
+/* Die beiden letzten Zeilen des Inhaltsverzeichnisses. `inhalt()` im Generator
+   haengt „Häufige Fragen" und „Quellen" selbst an, und ihre Ziele liegen
+   AUSSERHALB von .prose: #faq-h ist ein `h2.hl` in der FAQ-Sektion, #quellen-h
+   ein `p.kicker`. Die Gruppe oben greift auf beide nicht — gemessen landeten
+   sie bei 320, 390, 768, 1024 und 1440 px mit scroll-margin 0 direkt unter der
+   Fensterkante und damit vollstaendig hinter der klebenden Leiste.
+   Das sind zwei von neun Sprungzielen in jedem der 21 Artikel. Aufgefallen ist
+   es erst, als der Kapitelzaehler eine Nachmessung ALLER Sprungziele noetig
+   machte — der Zaehler selbst war unschuldig, der Fehler lag seit dem Umbau
+   daneben. Deswegen wird hier Ziel fuer Ziel gemessen und nicht eines
+   stellvertretend fuer alle. */
+#faq-h,
+#quellen-h{scroll-margin-top:var(--ankerluft,6rem)}
 /* Die Rubrikzeile des Wissens-Index trug eine halbe Zeile mehr. Bleibt so. */
 .rail__t{scroll-margin-top:calc(var(--ankerluft,6rem) + .5rem)}
 
@@ -253,10 +323,161 @@
   .masthead .hl--lang{font-size:min(var(--hl-size),7.3vw)}
 }
 
-/* Karte ohne Foto. Die 21 Indikationen haben keine eigenen Bilder, und sie
-   sollen auch keine bekommen: generische Gemüse-Fotos wären genau die
-   Bildsprache, gegen die der Text argumentiert. Also trägt die Karte, was sie
-   wirklich unterscheidet — den Diagnosecode.
+/* ---------- Code-Platte im Artikelkopf ---------- */
+/* Steht an der Stelle, an der auf den Beat-Seiten ein Foto steht, und ersetzt
+   die Kickerzeile (`.kicker` in style.css) — sie kommt nicht zusätzlich dazu,
+   sonst stünde „ICD-10 K90.0" zweimal untereinander.
+
+   Warum hier kein FOTO steht (10.10.2026, gilt weiter): ein Gesicht über der
+   Zeile „Adipositas" oder „Lipödem" verknüpft diese Person sichtbar mit dieser
+   Diagnose. Das ist nicht Geschmack, sondern die Regel der Lizenzen selbst —
+   Adobe Stock untersagt Verwendungen, die eine körperliche oder seelische
+   Erkrankung nahelegen, ohne Kennzeichnung als Illustration; Pexels erhebt
+   keine Model Releases und kann Persönlichkeitsrechte nicht zusagen; Unsplash
+   schweigt dazu ganz. Gemessen hält der eigene Bestand 16 Motive, 5 davon ohne
+   erkennbares Gesicht (pruefung/gesichter.swift) — nicht einmal genug für ein
+   Viertel der 21, und die mit Gesicht sind hier aus einem Grund gesperrt, den
+   keine Freigabe löst. Zuschneiden half nicht: übrig blieben kopflose
+   Oberkörper.
+
+   Was die Platte zeigt, ist das Einzige, was diesen Artikel von den anderen
+   zwanzig unterscheidet und dabei belegt ist.
+
+   Der Satz „deshalb gar kein Bild" stand hier bis zum 10.10.2026 und ist
+   gefallen, nicht widerlegt: er betraf Menschen im Bild, und das Kopfband
+   unter diesem Kopf zeigt keine. Siehe `.artband` weiter unten. */
+.platte{
+  margin:0 0 1.7rem;
+  display:inline-flex;flex-direction:column;gap:.55rem;
+  padding:1rem 1.6rem 1.15rem;
+  border:1px solid rgba(251,241,224,.18);
+  border-left:3px solid var(--orange);
+  background:rgba(11,22,17,.55);
+  max-width:100%;
+}
+.platte__l{
+  font-size:.625rem;font-weight:500;
+  letter-spacing:.24em;text-transform:uppercase;
+  color:var(--orange);
+  /* Die Laufweite hängt rechts ein Leerzeichen an — gleicher Ausgleich wie bei
+     .kicker in style.css, sonst sitzt das Wort sichtbar links. */
+  text-indent:.24em;
+}
+.platte__c{
+  font-weight:900;line-height:.95;letter-spacing:-.025em;
+  color:var(--cream);
+  /* Ohne tabular-nums sind „E11" und „E78" unterschiedlich breit — bei 56px
+     Schriftgröße sieht man das. */
+  font-variant-numeric:tabular-nums;
+  /* Die Codes sind 3 bis 15 Zeichen lang, von „E11" bis „E43–E46 / R63.6".
+     Eine feste Größe kann nur einen von beiden bedienen: bei 4rem läuft der
+     lange über die Spalte, bei 2,4rem sieht der kurze verloren aus. Deshalb
+     rechnet die Zeile mit der Zeichenzahl, die der Generator als --zeichen
+     mitgibt — nur er kennt sie.
+
+     Die drei Zahlen sind gemessen, nicht geschätzt (pruefung/platte-breite.py):
+     - 22rem = Breite, die die Platte am Schreibtisch höchstens einnehmen soll.
+       86vw hält sie auf dem Telefon im Satzspiegel — das ist dort zugleich die
+       Spaltenbreite, weil --rand auf jeder Seite rund 7vw nimmt.
+     - 3.4rem müssen WIEDER ABGEZOGEN werden: das eigene Padding (2 × 1,6rem)
+       plus die beiden Rahmen. Ohne diesen Abzug stand der Textplatz um 54px zu
+       hoch im Budget, und „Ernährungsform" wurde bei 320px um 10px, bei 360px
+       um 5px und bei 390px um 0,5px abgeschnitten. Gesehen hat man davon
+       nichts: `.masthead{overflow:hidden}` (pages.css) schluckt den Überhang
+       stillschweigend, und auch die Überlaufprüfung des Dokuments bleibt
+       stumm, weil die Box selbst in der Spalte bleibt — nur ihr Inhalt nicht.
+       Genau dieselbe Falle wie oben bei .masthead .hl--lang.
+     - Faktor 0,55: gemessen sind die Zeichen von Barlow 900 im Mittel 0,464em
+       breit (Codes, tabular-nums) und 0,502em (Buchstaben, „Ernährungsform").
+       0,55 liegt über beidem und lässt rund 8 % Luft für Geräte, auf denen
+       Barlow nicht lädt und eine breitere Systemschrift einspringt.
+     Rückfall 6, falls die Variable je fehlt — dann steht eine mittelgroße
+     Platte da, kein Überlauf. */
+  font-size:clamp(1.375rem, calc((min(22rem, 86vw) - 3.4rem) / (var(--zeichen,6) * .55)), 4rem);
+}
+
+/* ---------- Kopfband je Artikel ---------- */
+/* Steht ZWISCHEN Masthead und Artikel, nicht darüber: oben trägt die Platte die
+   Kennung, das Bild kommt danach, weil es den Artikel erläutert und ihn nicht
+   ankündigt.
+
+   Motiv, Alt-Text, Prompt und die Regel „nur was der Artikel nennt" stehen in
+   tools/wissen_bilder.py — dort, nicht hier, wird entschieden, was im Bild
+   liegen darf. Diese Datei bestimmt nur, wie hoch und wie dunkel.
+
+   Keine Personen, keine Hände, keine Schrift, kein Logo: damit ist der Einwand
+   von oben (`.platte`) gegenstandslos, und die Lizenzfrage löst sich mit, weil
+   nichts zugekauft ist.
+
+   Höhe als clamp und nicht als aspect-ratio: die Quelle ist 3168×1344 (21:9),
+   als Streifen wäre sie bei 1440px Fenster 611px hoch und schöbe den Text aus
+   dem ersten Bildschirm. 30vw mit Deckel bei 360px hält den Artikelanfang
+   sichtbar. Das Bild gibt width/height mit — die Quellmaße, für das
+   Seitenverhältnis gegen den Layoutsprung —, der Zuschnitt macht object-fit.
+   object-position 46 % statt 50 %: der Tresen liegt im unteren Drittel, 46 %
+   nimmt oben etwas Wand mit und schneidet unten die leere Fläche weg.
+
+   Der Verlauf darüber ist kein Effekt, sondern die Naht: oben läuft das Bild
+   in den Masthead, unten in den Lesegrund (--tief, rgb(11,22,17)). Ohne ihn
+   stehen zwei harte Kanten im Satz.
+
+   LCP: vorher war das h1 das größte Element, jetzt ist es dieses Bild. Deshalb
+   fetchpriority="high" und ausdrücklich KEIN loading="lazy" — mit lazy würde
+   Google genau das Element messen, dessen Laden man verzögert hat. */
+.artband{margin:0;position:relative}
+.artband img{
+  display:block;width:100%;
+  height:clamp(190px,30vw,360px);
+  object-fit:cover;object-position:50% 46%;
+}
+.artband::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,
+    rgba(11,22,17,.55) 0,
+    rgba(11,22,17,0) 38%,
+    rgba(11,22,17,0) 62%,
+    rgba(11,22,17,.75) 100%);
+}
+
+/* ---------- Kapitelzähler ---------- */
+/* „KAPITEL 03 / 08" über jeder Abschnittsüberschrift. Der Anlass: ein Artikel
+   ist gemessen 8262px hoch, und auf dem Weg nach unten sagt nichts, wo man
+   gerade ist — das Inhaltsverzeichnis liegt außerhalb des Blickfelds, sobald
+   man liest. Ein Kopfbild hätte nur den ersten Bildschirm gelöst.
+
+   Die Zahl steht als Attribut an der H2, nicht als Textknoten davor. Zwei
+   Gründe, beide hart:
+   - `scroll-margin-top:var(--ankerluft)` hängt an der H2 (siehe oben). Ein
+     eigenes Element darüber liegt außerhalb dieser Box und verschwindet bei
+     390px hinter der 121px hohen Kopfleiste — genau der Fehler, der weiter
+     oben beschrieben und behoben ist. Als ::before bleibt der Zähler INNEN.
+   - Als Attribut ist die Zahl kein Text: sie fällt nicht in die Wortzahl und
+     nicht in die Überschrift, die Google als Gliederung liest.
+   Vorgelesen wird sie trotzdem — ::before-Inhalt lesen Screenreader mit —, und
+   das ist hier richtig: „Kapitel 3 von 8" ist genau die Orientierung, um die
+   es geht.
+
+   Nur Abschnitte tragen das Attribut. Die H2 von FAQ und Quellen stehen in der
+   Vorlage und zählen nicht mit, sonst wäre „von 08" mal 8, mal 10. */
+.prose h2[data-kap]::before{
+  content:"Kapitel " attr(data-kap) " / " attr(data-kap-von);
+  display:block;
+  margin-bottom:.6rem;
+  font-size:.625rem;font-weight:600;
+  letter-spacing:.22em;text-transform:uppercase;
+  color:var(--orange);
+  font-variant-numeric:tabular-nums;
+}
+
+/* Karte ohne Foto. Seit dem 10.10.2026 hat jeder Artikel ein eigenes Kopfband
+   (`.artband`, img/r/wissen-*.webp) — die Karte bekommt es trotzdem nicht, und
+   zwar aus dem Grund, der dem Band im Artikel nützt: alle 21 Motive teilen
+   bewusst einen Look (ein Stahltresen, ein Licht von rechts, eine
+   dunkelgrüne Wand). Im Artikel ist das Wiedererkennung. In einer Leiste, in
+   der 21 Karten nebeneinanderstehen, wären es 21 fast gleiche Thumbnails —
+   also genau die generische Bildsprache, gegen die der Text argumentiert, nur
+   diesmal durch Wiederholung statt durch das Motiv.
+   Also trägt die Karte, was sie wirklich unterscheidet — den Diagnosecode.
    .qc__img entfällt ersatzlos (eigener Block in pages.css, kein Pflichtteil);
    an seine Stelle tritt der Code als Anker: groß genug, um beim Überfliegen
    einer Leiste die Marke zu setzen, die sonst das Bild setzt. */
