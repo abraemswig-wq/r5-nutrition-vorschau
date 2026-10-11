@@ -124,6 +124,19 @@
    markenlokal: der Wert in pages.css steht auf 33 Seiten der Praxis. */
 .artcover__bg>img{object-position:center 10%}
 
+/* Die Ausnahme: wissen/index.html traegt kein Portraet, sondern ein Stillleben
+   (tools/wissen_bilder.py, Motiv 'uebersicht'). Die 10 % oben schuetzen
+   Scheitel — hier gibt es keine, und sie kosten stattdessen die untere
+   Bildkante. Gerechnet fuer 1440x640: sichtbar sind 59,5 % der Bildhoehe, bei
+   10 % also 4,0–63,6 %. Das schneidet Mandeln und Brotfuss ab, und der Tresen
+   endet mitten im Bild. Bei 50 % liegt das Fenster auf 20,2–79,8 %: alle acht
+   Lebensmittel vollstaendig, darunter die leere dunkle Tresenflaeche — genau
+   dort stehen Kicker, H1, Lede und die beiden Rufe.
+   Unterhalb von 821 px wird gar nicht senkrecht beschnitten (bei 390x506
+   fuellt die Bildhoehe den Kasten), der Wert wirkt also nur auf breiten
+   Schirmen. */
+.artcover__bg--stillleben>img{object-position:center center}
+
 /* ---------- Bildausschnitt des Intro-Motivs ---------- */
 /* Maya steht im rechten Drittel des Fotos. Unterhalb von 821px laeuft die
    Startseite ohne Kino-Mechanik, das Motiv steht dann hochkant im Fenster:
