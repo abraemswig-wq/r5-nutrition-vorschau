@@ -15,7 +15,7 @@
 .saeulen--vier{grid-template-columns:repeat(4,minmax(0,1fr))}
 
 /* ---------- Ein Standort, nicht zwei ---------- */
-/* Beratung findet nur an der Weseler Strasse 71 statt. Im Zweierraster der
+/* Beratung findet nur an der Friedrich-Ebert-Strasse 132 statt. Im Zweierraster der
    Praxis-Seite bliebe die rechte Haelfte leer und saehe aus wie ein
    Ladefehler. Gleiche Begruendung wie im Club. */
 .orte--eins{grid-template-columns:minmax(0,27rem)}
